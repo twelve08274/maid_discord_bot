@@ -1,4 +1,7 @@
 discord.py
+fastapi
 flake8
+httpx
 mypy
 python-dotenv
+uvicorn

@@ -1,2 +1,4 @@
-discord
-dotenv
+discord.py
+flake8
+mypy
+python-dotenv

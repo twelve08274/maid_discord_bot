@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from maid_discord_bot.commands.ping import register_ping_command
+from maid_discord_bot.commands.register import register_register_command
 from maid_discord_bot.config import (
     get_discord_test_guild_id,
     get_discord_token,
@@ -11,6 +12,7 @@ from maid_discord_bot.config import (
 class MaidBot(commands.Bot):
     async def setup_hook(self) -> None:
         register_ping_command(self)
+        register_register_command(self)
 
         test_guild_id = get_discord_test_guild_id()
         if test_guild_id is None:

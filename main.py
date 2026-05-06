@@ -1,22 +1,12 @@
-import discord
-from discord.ext import commands
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+import sys
+from pathlib import Path
 
 
-@bot.event
-async def on_ready():
-    print(f"{bot.user} が起動しました！")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+from maid_discord_bot.bot import run_bot  # noqa: E402
 
 
-@bot.command()
-async def ping(ctx):
-    await ctx.send("pong!")
+if __name__ == "__main__":
+    run_bot()
 
-
-bot.run(TOKEN)

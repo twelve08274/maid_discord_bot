@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
     mood TEXT NOT NULL DEFAULT 'normal',
     auto_daily_enabled INTEGER NOT NULL DEFAULT 0,
     last_login_date TEXT,
+    neko_streak INTEGER NOT NULL DEFAULT 0,
+    last_neko_date TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,6 +40,15 @@ CREATE TABLE IF NOT EXISTS daily_claims (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE (user_id, claim_date)
+);
+
+CREATE TABLE IF NOT EXISTS neko_claims (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    claimed_date TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (user_id, claimed_date)
 );
 
 CREATE TABLE IF NOT EXISTS ft_location_rewards (
@@ -143,6 +154,15 @@ INITIAL_ACHIEVEMENTS = (
         0,
         0,
     ),
+    (
+        "neko_7_days",
+        "Chosen by Neko",
+        "Ran /neko for 7 consecutive days.",
+        1,
+        0,
+        0,
+        0,
+    ),
 )
 
 
@@ -163,7 +183,22 @@ def _add_missing_achievement_columns(connection: sqlite3.Connection) -> None:
     for column_name, definition in additions.items():
         if column_name not in columns:
             connection.execute(
-                f"ALTER TABLE achievements ADD COLUMN {column_name} {definition}"
+                "ALTER TABLE achievements "
+                f"ADD COLUMN {column_name} {definition}"
+            )
+
+
+def _add_missing_user_columns(connection: sqlite3.Connection) -> None:
+    columns = _column_names(connection, "users")
+    additions = {
+        "neko_streak": "INTEGER NOT NULL DEFAULT 0",
+        "last_neko_date": "TEXT",
+    }
+
+    for column_name, definition in additions.items():
+        if column_name not in columns:
+            connection.execute(
+                f"ALTER TABLE users ADD COLUMN {column_name} {definition}"
             )
 
 
@@ -194,6 +229,7 @@ def _seed_initial_achievements(connection: sqlite3.Connection) -> None:
 
 def initialize_database(connection: sqlite3.Connection) -> None:
     connection.executescript(SCHEMA_SQL)
+    _add_missing_user_columns(connection)
     _add_missing_achievement_columns(connection)
     _seed_initial_achievements(connection)
     connection.commit()

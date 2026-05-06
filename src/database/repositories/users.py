@@ -50,6 +50,7 @@ def delete_user_by_discord_id(
     child_tables = (
         "user_achievements",
         "daily_claims",
+        "neko_claims",
         "ft_location_rewards",
         "tasks",
         "ft_links",
@@ -75,5 +76,25 @@ def set_auto_daily_enabled(
         WHERE id = ?
         """,
         (1 if enabled else 0, user_id),
+    )
+    connection.commit()
+
+
+def update_neko_streak(
+    connection: sqlite3.Connection,
+    user_id: int,
+    streak: int,
+    last_neko_date: str,
+) -> None:
+    connection.execute(
+        """
+        UPDATE users
+        SET
+            neko_streak = ?,
+            last_neko_date = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (streak, last_neko_date, user_id),
     )
     connection.commit()

@@ -71,6 +71,6 @@ def get_ft_oauth_config() -> FtOAuthConfig:
 
 def get_ft_state_secret() -> str:
     value = os.getenv("FT_STATE_SECRET")
-    if value is None or value == "":
+    if value is None or value.strip() == "":
         raise ConfigError("FT_STATE_SECRET is not set.")
     return value

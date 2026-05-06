@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.config import ConfigError
-from maid_discord_bot.services.ft_api import create_authorization_url
-from maid_discord_bot.services.oauth_state import create_oauth_state
+from ..config import ConfigError
+from ..services.oauth_state import create_oauth_state
+from ..services.ft_api import create_authorization_url
 
 
 def register_register_command(bot: commands.Bot) -> None:

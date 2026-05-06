@@ -7,6 +7,7 @@ from discord.ext import commands
 
 from .commands.achievements import register_achievements_command
 from .commands.autodaily import register_autodaily_command
+from .commands.neko import register_neko_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
 from .commands.status import register_status_command
@@ -55,6 +56,7 @@ class MaidBot(commands.Bot):
         register_autodaily_command(self)
         register_status_command(self)
         register_where_command(self)
+        register_neko_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()
 

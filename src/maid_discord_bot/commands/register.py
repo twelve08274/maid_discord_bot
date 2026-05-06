@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 
 from maid_discord_bot.config import ConfigError
+from maid_discord_bot.database.connection import get_connection
+from maid_discord_bot.database.schema import initialize_database
+from maid_discord_bot.services.achievements import grant_achievement
 from maid_discord_bot.services.ft_api import create_authorization_url
 from maid_discord_bot.services.oauth_state import create_oauth_state
 
@@ -28,3 +31,12 @@ def register_register_command(bot: commands.Bot) -> None:
             "The link expires in 10 minutes.",
             ephemeral=True,
         )
+
+        with get_connection() as connection:
+            initialize_database(connection)
+            await grant_achievement(
+                bot=interaction.client,
+                connection=connection,
+                discord_user_id=interaction.user.id,
+                achievement_code="first_register",
+            )

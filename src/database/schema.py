@@ -40,11 +40,29 @@ CREATE TABLE IF NOT EXISTS daily_claims (
     UNIQUE (user_id, claim_date)
 );
 
+CREATE TABLE IF NOT EXISTS ft_location_rewards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ft_location_id TEXT NOT NULL,
+    ft_login TEXT NOT NULL,
+    host TEXT,
+    begin_at TEXT NOT NULL,
+    exp_gained INTEGER NOT NULL DEFAULT 10,
+    notified_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (user_id, ft_location_id)
+);
+
 CREATE TABLE IF NOT EXISTS achievements (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
+    hidden INTEGER NOT NULL DEFAULT 0,
+    reward_exp INTEGER NOT NULL DEFAULT 0,
+    reward_affection INTEGER NOT NULL DEFAULT 0,
+    reward_stamina INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -70,6 +88,112 @@ CREATE TABLE IF NOT EXISTS tasks (
 """
 
 
+INITIAL_ACHIEVEMENTS = (
+    (
+        "first_register",
+        "First Registration",
+        "Linked your first registration flow.",
+        0,
+        0,
+        5,
+        0,
+    ),
+    (
+        "first_daily",
+        "First Daily",
+        "Claimed your first 42 login daily reward.",
+        0,
+        10,
+        3,
+        0,
+    ),
+    (
+        "daily_3_streak",
+        "Three Day Streak",
+        "Claimed 42 login daily rewards for 3 days in a row.",
+        0,
+        30,
+        5,
+        0,
+    ),
+    (
+        "daily_7_streak",
+        "One Week Streak",
+        "Claimed 42 login daily rewards for 7 days in a row.",
+        0,
+        70,
+        10,
+        0,
+    ),
+    (
+        "level_5",
+        "Rising Apprentice",
+        "Reached level 5.",
+        0,
+        50,
+        0,
+        0,
+    ),
+    (
+        "level_10",
+        "Trusted Partner",
+        "Reached level 10.",
+        0,
+        100,
+        0,
+        0,
+    ),
+)
+
+
+def _column_names(connection: sqlite3.Connection, table_name: str) -> set[str]:
+    rows = connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return {str(row[1]) for row in rows}
+
+
+def _add_missing_achievement_columns(connection: sqlite3.Connection) -> None:
+    columns = _column_names(connection, "achievements")
+    additions = {
+        "hidden": "INTEGER NOT NULL DEFAULT 0",
+        "reward_exp": "INTEGER NOT NULL DEFAULT 0",
+        "reward_affection": "INTEGER NOT NULL DEFAULT 0",
+        "reward_stamina": "INTEGER NOT NULL DEFAULT 0",
+    }
+
+    for column_name, definition in additions.items():
+        if column_name not in columns:
+            connection.execute(
+                f"ALTER TABLE achievements ADD COLUMN {column_name} {definition}"
+            )
+
+
+def _seed_initial_achievements(connection: sqlite3.Connection) -> None:
+    connection.executemany(
+        """
+        INSERT INTO achievements (
+            code,
+            name,
+            description,
+            hidden,
+            reward_exp,
+            reward_affection,
+            reward_stamina
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(code) DO UPDATE SET
+            name = excluded.name,
+            description = excluded.description,
+            hidden = excluded.hidden,
+            reward_exp = excluded.reward_exp,
+            reward_affection = excluded.reward_affection,
+            reward_stamina = excluded.reward_stamina
+        """,
+        INITIAL_ACHIEVEMENTS,
+    )
+
+
 def initialize_database(connection: sqlite3.Connection) -> None:
     connection.executescript(SCHEMA_SQL)
+    _add_missing_achievement_columns(connection)
+    _seed_initial_achievements(connection)
     connection.commit()

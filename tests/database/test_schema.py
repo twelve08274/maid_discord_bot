@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.database.schema import initialize_database
+from src.database.schema import initialize_database  # noqa: E402
 
 
 class SchemaTests(unittest.TestCase):
@@ -35,6 +35,7 @@ class SchemaTests(unittest.TestCase):
                 "users",
                 "ft_links",
                 "daily_claims",
+                "ft_location_rewards",
                 "achievements",
                 "user_achievements",
                 "tasks",
@@ -64,7 +65,9 @@ class SchemaTests(unittest.TestCase):
                 (user_id, "2026-05-06", "auto"),
             )
 
-    def test_user_achievements_are_unique_per_user_and_achievement(self) -> None:
+    def test_user_achievements_are_unique(
+        self,
+    ) -> None:
         user_cursor = self.connection.execute(
             "INSERT INTO users (discord_user_id) VALUES (?)",
             ("123",),
@@ -74,7 +77,11 @@ class SchemaTests(unittest.TestCase):
             INSERT INTO achievements (code, name, description)
             VALUES (?, ?, ?)
             """,
-            ("first_register", "First Register", "Registered for the first time."),
+            (
+                "schema_test_achievement",
+                "First Register",
+                "Registered for the first time.",
+            ),
         )
 
         user_id = int(user_cursor.lastrowid)
@@ -95,6 +102,23 @@ class SchemaTests(unittest.TestCase):
                 """,
                 (user_id, achievement_id),
             )
+
+    def test_initialize_database_seeds_initial_achievements(self) -> None:
+        rows = self.connection.execute(
+            """
+            SELECT code, reward_affection
+            FROM achievements
+            ORDER BY code
+            """
+        ).fetchall()
+
+        achievements = {row["code"]: row for row in rows}
+
+        self.assertIn("first_register", achievements)
+        self.assertEqual(
+            int(achievements["first_register"]["reward_affection"]),
+            5,
+        )
 
     def test_tasks_are_unique_per_user_and_task_name(self) -> None:
         cursor = self.connection.execute(

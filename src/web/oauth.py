@@ -2,12 +2,18 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
-from ..database.connection import get_connection
-from ..database.repositories.ft_links import upsert_ft_link
-from ..database.repositories.users import get_or_create_user_id
-from ..database.schema import initialize_database
-from ..services.ft_api import exchange_code_for_token, fetch_current_user
-from ..services.oauth_state import OAuthStateError, parse_oauth_state
+from src.database.connection import get_connection
+from src.database.repositories.ft_links import upsert_ft_link
+from src.database.repositories.users import get_or_create_user_id
+from src.database.schema import initialize_database
+from src.services.ft_api import (
+    exchange_code_for_token,
+    fetch_current_user,
+)
+from src.services.oauth_state import (
+    OAuthStateError,
+    parse_oauth_state,
+)
 
 
 router = APIRouter()
@@ -30,7 +36,10 @@ async def ft_oauth_callback(
         detail = f"42 API returned {error.response.status_code}."
         raise HTTPException(status_code=502, detail=detail) from error
     except httpx.HTTPError as error:
-        raise HTTPException(status_code=502, detail="42 API request failed.") from error
+        raise HTTPException(
+            status_code=502,
+            detail="42 API request failed.",
+        ) from error
 
     with get_connection() as connection:
         initialize_database(connection)

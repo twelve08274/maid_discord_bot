@@ -35,12 +35,43 @@ class SchemaTests(unittest.TestCase):
                 "users",
                 "ft_links",
                 "daily_claims",
+                "neko_claims",
                 "ft_location_rewards",
                 "achievements",
                 "user_achievements",
                 "tasks",
             }.issubset(table_names)
         )
+
+    def test_users_have_neko_streak_columns(self) -> None:
+        rows = self.connection.execute("PRAGMA table_info(users)").fetchall()
+        column_names = {row["name"] for row in rows}
+
+        self.assertIn("neko_streak", column_names)
+        self.assertIn("last_neko_date", column_names)
+
+    def test_neko_claims_are_unique_per_user_and_date(self) -> None:
+        cursor = self.connection.execute(
+            "INSERT INTO users (discord_user_id) VALUES (?)",
+            ("123",),
+        )
+        user_id = int(cursor.lastrowid)
+        self.connection.execute(
+            """
+            INSERT INTO neko_claims (user_id, claimed_date)
+            VALUES (?, ?)
+            """,
+            (user_id, "2026-05-06"),
+        )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.connection.execute(
+                """
+                INSERT INTO neko_claims (user_id, claimed_date)
+                VALUES (?, ?)
+                """,
+                (user_id, "2026-05-06"),
+            )
 
     def test_daily_claims_are_unique_per_user_and_date(self) -> None:
         cursor = self.connection.execute(
@@ -115,6 +146,7 @@ class SchemaTests(unittest.TestCase):
         achievements = {row["code"]: row for row in rows}
 
         self.assertIn("first_register", achievements)
+        self.assertIn("neko_7_days", achievements)
         self.assertEqual(
             int(achievements["first_register"]["reward_affection"]),
             5,

@@ -54,3 +54,23 @@ def set_auto_daily_enabled(
         (1 if enabled else 0, user_id),
     )
     connection.commit()
+
+
+def update_neko_streak(
+    connection: sqlite3.Connection,
+    user_id: int,
+    streak: int,
+    last_neko_date: str,
+) -> None:
+    connection.execute(
+        """
+        UPDATE users
+        SET
+            neko_streak = ?,
+            last_neko_date = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (streak, last_neko_date, user_id),
+    )
+    connection.commit()

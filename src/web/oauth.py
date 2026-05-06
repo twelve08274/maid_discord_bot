@@ -30,7 +30,10 @@ async def ft_oauth_callback(
         detail = f"42 API returned {error.response.status_code}."
         raise HTTPException(status_code=502, detail=detail) from error
     except httpx.HTTPError as error:
-        raise HTTPException(status_code=502, detail="42 API request failed.") from error
+        raise HTTPException(
+            status_code=502,
+            detail="42 API request failed.",
+        ) from error
 
     with get_connection() as connection:
         initialize_database(connection)

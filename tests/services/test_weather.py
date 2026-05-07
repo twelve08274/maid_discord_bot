@@ -7,7 +7,7 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.services.weather import (  # noqa: E402
+from src.services.weather import (  # noqa: E402
     WeatherApiKeyUnauthorizedError,
     WeatherLocationNotFoundError,
     WeatherServiceError,

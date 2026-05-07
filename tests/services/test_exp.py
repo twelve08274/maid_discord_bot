@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.database.schema import initialize_database  # noqa: E402
-from maid_discord_bot.services.exp import (  # noqa: E402
+from src.database.schema import initialize_database  # noqa: E402
+from src.services.exp import (  # noqa: E402
     add_exp,
     required_exp_for_level,
 )

@@ -4,8 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from maid_discord_bot.database.connection import get_connection  # noqa: E402
-from maid_discord_bot.database.schema import initialize_database  # noqa: E402
+from src.database.connection import get_connection  # noqa: E402
+from src.database.schema import initialize_database  # noqa: E402
 
 
 def main() -> None:

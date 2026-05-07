@@ -34,17 +34,17 @@ class WeatherReport:
 
 def build_weather_comment(weather: str, temperature_celsius: float) -> str:
     text = weather.lower()
-    if "rain" in text or "drizzle" in text:
-        return "Bring an umbrella before heading out."
-    if "snow" in text:
-        return "Watch your step and stay warm."
-    if "clear" in text:
-        return "Clear skies today. Enjoy the nice weather."
+    if "rain" in text or "drizzle" in text or "雨" in text:
+        return "雨具を持ってお出かけください。"
+    if "snow" in text or "雪" in text:
+        return "足元に気をつけて、暖かくしてください。"
+    if "clear" in text or "晴" in text:
+        return "よい天気です。気持ちよく過ごせそうです。"
     if temperature_celsius >= 30:
-        return "It may get hot today. Remember to drink water."
+        return "暑くなりそうです。こまめに水分補給してください。"
     if temperature_celsius <= 5:
-        return "It is cold today. Dress warmly."
-    return "Looks like a steady day. Take it at your pace."
+        return "冷え込みます。暖かくしてお過ごしください。"
+    return "今日も無理せず、よい一日にしましょう。"
 
 
 def parse_openweather_response(payload: dict[str, Any]) -> WeatherReport:
@@ -100,7 +100,7 @@ async def fetch_current_weather(
         "q": location,
         "appid": api_key,
         "units": "metric",
-        "lang": "en",
+        "lang": "ja",
     }
 
     async def request(active_client: httpx.AsyncClient) -> WeatherReport:

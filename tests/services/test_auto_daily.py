@@ -8,21 +8,21 @@ from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.database.repositories.ft_links import (  # noqa: E402
+from src.database.repositories.ft_links import (  # noqa: E402
     LinkedFtAccount,
     upsert_ft_link,
 )
-from maid_discord_bot.database.repositories.ft_location_rewards import (  # noqa: E402,E501
+from src.database.repositories.ft_location_rewards import (  # noqa: E402,E501
     create_ft_location_reward,
 )
-from maid_discord_bot.database.repositories.users import (  # noqa: E402
+from src.database.repositories.users import (  # noqa: E402
     get_or_create_user_id,
 )
-from maid_discord_bot.database.schema import initialize_database  # noqa: E402
-from maid_discord_bot.services.auto_daily import (  # noqa: E402
+from src.database.schema import initialize_database  # noqa: E402
+from src.services.auto_daily import (  # noqa: E402
     check_and_reward_auto_daily,
 )
-from maid_discord_bot.services.ft_api import FtLocation, FtToken  # noqa: E402
+from src.services.ft_api import FtLocation, FtToken  # noqa: E402
 
 
 class AutoDailyTests(unittest.IsolatedAsyncioTestCase):
@@ -54,7 +54,7 @@ class AutoDailyTests(unittest.IsolatedAsyncioTestCase):
         )
 
         with patch(
-            "maid_discord_bot.services.auto_daily.fetch_active_location",
+            "src.services.auto_daily.fetch_active_location",
             new=AsyncMock(return_value=location),
         ):
             first_result = await check_and_reward_auto_daily(
@@ -95,11 +95,11 @@ class AutoDailyTests(unittest.IsolatedAsyncioTestCase):
 
         with (
             patch(
-                "maid_discord_bot.services.auto_daily.refresh_access_token",
+                "src.services.auto_daily.refresh_access_token",
                 new=AsyncMock(return_value=refreshed_token),
             ) as refresh_mock,
             patch(
-                "maid_discord_bot.services.auto_daily.fetch_active_location",
+                "src.services.auto_daily.fetch_active_location",
                 new=AsyncMock(return_value=None),
             ) as location_mock,
         ):
@@ -144,7 +144,7 @@ class AutoDailyTests(unittest.IsolatedAsyncioTestCase):
         )
 
         with patch(
-            "maid_discord_bot.services.auto_daily.fetch_active_location",
+            "src.services.auto_daily.fetch_active_location",
             new=AsyncMock(return_value=location),
         ):
             result = await check_and_reward_auto_daily(

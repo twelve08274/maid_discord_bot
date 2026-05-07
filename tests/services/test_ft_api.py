@@ -1,8 +1,8 @@
 import unittest
 from urllib.parse import parse_qs, urlparse
 
-from maid_discord_bot.config import FtOAuthConfig
-from maid_discord_bot.services.ft_api import (
+from ...src.config import FtOAuthConfig
+from ...src.services.ft_api import (
     FT_AUTHORIZE_URL,
     create_authorization_url,
 )

@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from maid_discord_bot.services.oauth_state import (
+from ...src.services.oauth_state import (
     OAuthStateError,
     create_oauth_state,
     parse_oauth_state,

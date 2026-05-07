@@ -2,9 +2,9 @@ import sqlite3
 import unittest
 from datetime import UTC, datetime
 
-from maid_discord_bot.database.repositories.ft_links import upsert_ft_link
-from maid_discord_bot.database.repositories.users import get_or_create_user_id
-from maid_discord_bot.database.schema import initialize_database
+from ...src.database.repositories.ft_links import upsert_ft_link
+from ...src.database.repositories.users import get_or_create_user_id
+from ...src.database.schema import initialize_database
 
 
 class FtLinksRepositoryTests(unittest.TestCase):

@@ -3,11 +3,11 @@ import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
-from maid_discord_bot.commands.register import (
+from ...src.commands.register import (
     build_register_message,
     create_register_authorization_url,
 )
-from maid_discord_bot.services.oauth_state import parse_oauth_state
+from ...src.services.oauth_state import parse_oauth_state
 
 
 class RegisterCommandTests(unittest.TestCase):

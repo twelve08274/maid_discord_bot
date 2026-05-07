@@ -105,6 +105,20 @@ def get_daily_reward_timezone() -> str:
     return os.getenv("DAILY_REWARD_TIMEZONE", "Asia/Tokyo")
 
 
+def get_openweather_api_key() -> str:
+    value = os.getenv("OPENWEATHER_API_KEY")
+    if value is None or value == "":
+        raise ConfigError("OPENWEATHER_API_KEY is not set.")
+    return value
+
+
+def get_weather_default_location() -> str:
+    value = os.getenv("WEATHER_DEFAULT_LOCATION")
+    if value is None or value == "":
+        raise ConfigError("WEATHER_DEFAULT_LOCATION is not set.")
+    return value
+
+
 def get_oauth_web_host() -> str:
     return os.getenv("OAUTH_WEB_HOST", "0.0.0.0")
 

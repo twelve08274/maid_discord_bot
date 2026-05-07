@@ -10,6 +10,7 @@ from .commands.autodaily import register_autodaily_command
 from .commands.neko import register_neko_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
+from .commands.weather import register_weather_command
 from .config import (
     get_discord_test_guild_id,
     get_discord_token,
@@ -51,6 +52,7 @@ class MaidBot(commands.Bot):
         register_achievements_command(self)
         register_autodaily_command(self)
         register_neko_command(self)
+        register_weather_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()
 
@@ -76,6 +78,7 @@ def create_bot() -> MaidBot:
 
 def run_bot() -> None:
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     oauth_web_server = OAuthWebServer()
     oauth_web_server.start()
     bot = create_bot()

@@ -56,6 +56,22 @@ def set_auto_daily_enabled(
     connection.commit()
 
 
+def add_affection(
+    connection: sqlite3.Connection,
+    user_id: int,
+    amount: int,
+) -> None:
+    connection.execute(
+        """
+        UPDATE users
+        SET affection = affection + ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (amount, user_id),
+    )
+    connection.commit()
+
+
 def update_neko_streak(
     connection: sqlite3.Connection,
     user_id: int,

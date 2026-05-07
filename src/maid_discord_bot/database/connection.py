@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from types import TracebackType
 
-from ..config import get_database_path
+from maid_discord_bot.config import get_database_path
 
 
 class ClosingConnection(sqlite3.Connection):

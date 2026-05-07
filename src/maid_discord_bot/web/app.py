@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from ..database.connection import get_connection
-from ..database.schema import initialize_database
-from .oauth import router as oauth_router
+from maid_discord_bot.database.connection import get_connection
+from maid_discord_bot.database.schema import initialize_database
+from maid_discord_bot.web.oauth import router as oauth_router
 
 
 def create_app() -> FastAPI:

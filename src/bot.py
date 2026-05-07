@@ -10,6 +10,7 @@ from .commands.autodaily import register_autodaily_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
 from .commands.unregister import register_unregister_command
+from .commands.where import register_where_command
 from .config import (
     get_discord_test_guild_id,
     get_discord_token,
@@ -51,6 +52,7 @@ class MaidBot(commands.Bot):
         register_unregister_command(self)
         register_achievements_command(self)
         register_autodaily_command(self)
+        register_where_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()
 

@@ -23,7 +23,7 @@ from src.services.ft_api import (
 
 
 AUTO_DAILY_EXP = 10
-TOKEN_REFRESH_MARGIN = timedelta(minutes=5)
+TOKEN_REFRESH_MARGIN = timedelta(minutes=1)
 
 
 @dataclass(frozen=True)

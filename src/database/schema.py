@@ -163,7 +163,8 @@ def _add_missing_achievement_columns(connection: sqlite3.Connection) -> None:
     for column_name, definition in additions.items():
         if column_name not in columns:
             connection.execute(
-                f"ALTER TABLE achievements ADD COLUMN {column_name} {definition}"
+                f"ALTER TABLE achievements ADD COLUMN "
+                f"{column_name} {definition}"
             )
 
 

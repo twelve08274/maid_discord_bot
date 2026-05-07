@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.commands.ping import register_ping_command
-from maid_discord_bot.config import (
+from .commands.ping import register_ping_command
+from .config import (
     get_discord_test_guild_id,
     get_discord_token,
 )

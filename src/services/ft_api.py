@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 import httpx
 
-from maid_discord_bot.config import FtOAuthConfig, get_ft_oauth_config
+from ..config import FtOAuthConfig, get_ft_oauth_config
 
 
 FT_AUTHORIZE_URL = "https://api.intra.42.fr/oauth/authorize"

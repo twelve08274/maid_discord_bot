@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.commands.ping import register_ping_command
-from maid_discord_bot.commands.register import register_register_command
-from maid_discord_bot.config import (
+from .commands.ping import register_ping_command
+from .commands.register import register_register_command
+from .config import (
     get_discord_test_guild_id,
     get_discord_token,
 )
@@ -26,7 +26,7 @@ class MaidBot(commands.Bot):
 
 def create_bot() -> MaidBot:
     intents = discord.Intents.default()
-    return MaidBot(command_prefix="!", intents=intents)
+    return MaidBot(command_prefix=commands.when_mentioned, intents=intents)
 
 
 def run_bot() -> None:

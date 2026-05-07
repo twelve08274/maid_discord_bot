@@ -5,7 +5,7 @@ import json
 import time
 from dataclasses import dataclass
 from secrets import token_urlsafe
-from maid_discord_bot.config import get_ft_state_secret
+from ..config import get_ft_state_secret
 
 
 class OAuthStateError(ValueError):

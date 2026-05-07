@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import discord
 from discord import app_commands
@@ -9,10 +9,8 @@ from src.database.repositories.ft_links import (
     get_ft_link_by_login,
     update_ft_tokens,
 )
+from src.services.auto_daily import TOKEN_REFRESH_MARGIN
 from src.services.ft_api import fetch_active_location, refresh_access_token
-
-
-_TOKEN_REFRESH_MARGIN = timedelta(minutes=1)
 
 
 def register_where_command(bot: commands.Bot) -> None:
@@ -35,7 +33,7 @@ def register_where_command(bot: commands.Bot) -> None:
 
             expires_soon = (
                 account.token_expires_at
-                <= datetime.now(UTC) + _TOKEN_REFRESH_MARGIN
+                <= datetime.now(UTC) + TOKEN_REFRESH_MARGIN
             )
             if expires_soon:
                 token = await refresh_access_token(account.refresh_token)

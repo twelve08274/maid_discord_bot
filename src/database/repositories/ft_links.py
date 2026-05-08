@@ -58,7 +58,7 @@ def get_ft_link_for_discord_user(
     connection: sqlite3.Connection,
     discord_user_id: int,
 ) -> sqlite3.Row | None:
-    return connection.execute(
+    return connection.execute(  # type: ignore[no-any-return]
         """
         SELECT ft_links.*
         FROM ft_links
@@ -67,6 +67,49 @@ def get_ft_link_for_discord_user(
         """,
         (str(discord_user_id),),
     ).fetchone()
+
+
+def get_ft_link(
+    connection: sqlite3.Connection,
+    user_id: int,
+) -> sqlite3.Row | None:
+    return connection.execute(
+        "SELECT ft_login FROM ft_links WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+
+
+def get_ft_link_by_login(
+    connection: sqlite3.Connection,
+    ft_login: str,
+) -> LinkedFtAccount | None:
+    row = connection.execute(
+        """
+        SELECT
+            users.id AS user_id,
+            users.discord_user_id,
+            ft_links.ft_user_id,
+            ft_links.ft_login,
+            ft_links.access_token,
+            ft_links.refresh_token,
+            ft_links.token_expires_at
+        FROM ft_links
+        INNER JOIN users ON users.id = ft_links.user_id
+        WHERE ft_links.ft_login = ?
+        """,
+        (ft_login,),
+    ).fetchone()
+    if row is None:
+        return None
+    return LinkedFtAccount(
+        user_id=int(row["user_id"]),
+        discord_user_id=int(row["discord_user_id"]),
+        ft_user_id=str(row["ft_user_id"]),
+        ft_login=str(row["ft_login"]),
+        access_token=str(row["access_token"]),
+        refresh_token=str(row["refresh_token"]),
+        token_expires_at=datetime.fromisoformat(str(row["token_expires_at"])),
+    )
 
 
 def list_auto_daily_ft_links(

@@ -1,3 +1,4 @@
+import io
 from datetime import UTC, datetime
 
 import discord
@@ -11,6 +12,12 @@ from src.database.repositories.ft_links import (
 )
 from src.services.auto_daily import TOKEN_REFRESH_MARGIN
 from src.services.ft_api import fetch_active_location, refresh_access_token
+from src.services.seat_map import (
+    CLUSTER_META,
+    build_description,
+    parse_host,
+    render_seat_map_gif,
+)
 
 
 def register_where_command(bot: commands.Bot) -> None:
@@ -66,7 +73,37 @@ def register_where_command(bot: commands.Bot) -> None:
             )
             return
 
+        host = location.host
+        try:
+            cluster_id, row, seat = parse_host(host)
+        except ValueError:
+            await interaction.followup.send(
+                f"`{login}` は **{host}** にいます。",
+                ephemeral=True,
+            )
+            return
+
+        if cluster_id not in CLUSTER_META:
+            await interaction.followup.send(
+                f"`{login}` は **{host}** にいます。（マップ未対応クラスタ）",
+                ephemeral=True,
+            )
+            return
+
+        gif_bytes = render_seat_map_gif(cluster_id, row, seat)
+        description = build_description(cluster_id, row, seat, login)
+
+        embed = discord.Embed(
+            title=f"{login} の現在地",
+            description=description,
+            color=discord.Color.from_rgb(243, 139, 168),
+        )
+        embed.set_footer(text=f"ホスト: {host}")
+        embed.set_image(url="attachment://seat_map.gif")
+
+        file = discord.File(io.BytesIO(gif_bytes), filename="seat_map.gif")
         await interaction.followup.send(
-            f"`{login}` は **{location.host}** にいます。",
+            embed=embed,
+            file=file,
             ephemeral=True,
         )

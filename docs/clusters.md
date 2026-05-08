@@ -46,9 +46,14 @@
 ## 画像レンダリング仕様
 
 - Pillow で生成（SVGをそのまま変換しない）
-- 向き: 90° 時計回り回転して横長 (720×320px)
+- 向き: 90° 時計回り回転して横長
   - SVG の y軸（行方向）→ canvas の x軸（左右）
   - SVG の x軸（席方向）→ canvas の y軸（上下）、s1が上
+- 出力サイズ・倍率は `src/services/seat_map.py` の `RENDER_TUNING` でクラスタごとに調整
+  - `canvas_w`, `canvas_h`: GIF画像自体のサイズ
+  - `scale`: fit後の追加倍率（端が切れない最大倍率で自動clamp）
+  - `offset_x`, `offset_y`: 手動の位置補正
+- 入口ラベル位置は `ENTRANCE_MARKERS` の canvas 座標で手動指定
 - 色テーマ: Catppuccin Mocha ベース
 - アニメーション: 対象席のドットが点滅する2フレームGIF（600ms間隔）
 - 机ペアの可視化: 各行内で2つのy-levelを `±5 SVGユニット` だけ中心からずらして表示し、どちら側の席かを判別できるようにしている

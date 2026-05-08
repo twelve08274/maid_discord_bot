@@ -48,6 +48,15 @@ class EntranceMarker:
     label: str
 
 
+@dataclass(frozen=True)
+class RenderTuning:
+    canvas_w: int = 720
+    canvas_h: int = 320
+    scale: float = 1.0
+    offset_x: float = 0.0
+    offset_y: float = 0.0
+
+
 CLUSTER_META: dict[str, ClusterMeta] = {
     "c1": ClusterMeta(
         "鯉 (c1)", 2, "right", entrance_row=4, entrance_seat_first=True
@@ -78,6 +87,17 @@ ENTRANCE_MARKERS: dict[str, EntranceMarker] = {
     "c4": EntranceMarker(x=444, y=288, label="入口↑"),
     "c5": EntranceMarker(x=374, y=38, label="入口↓"),
     "c6": EntranceMarker(x=374, y=278, label="入口↑"),
+}
+
+# Per-cluster render tuning. Canvas size changes are useful for tall/narrow
+# clusters where a fixed 720x320 canvas creates large side margins.
+RENDER_TUNING: dict[str, RenderTuning] = {
+    "c1": RenderTuning(),
+    "c2": RenderTuning(canvas_w=640, canvas_h=360, scale=1.05),
+    "c3": RenderTuning(),
+    "c4": RenderTuning(canvas_w=720, canvas_h=360, scale=1.05),
+    "c5": RenderTuning(canvas_w=500, canvas_h=360, scale=1.06),
+    "c6": RenderTuning(canvas_w=500, canvas_h=360, scale=1.06),
 }
 
 # Row-based: seats arranged horizontally per row group.
@@ -327,8 +347,12 @@ def _font(size: int = 11) -> ImageFont.ImageFont:
 
 def _compute_scale(
     positions: dict[tuple[int, int], tuple[float, float]],
+    tuning: RenderTuning | None = None,
 ) -> tuple[float, float, float, float, float, float, float, float]:
     """Return transform values for the rotated mapping."""
+    if tuning is None:
+        tuning = RenderTuning()
+
     xs = [p[0] for p in positions.values()]
     ys = [p[1] for p in positions.values()]
     x_min, x_max = min(xs), max(xs)
@@ -338,14 +362,16 @@ def _compute_scale(
     data_w = (y_max - y_min) + 20  # svg_height of rect = 20
     data_h = (x_max - x_min) + 16  # svg_width  of rect = 16
 
-    avail_w = _CANVAS_W - 2 * _PAD_X
-    avail_h = _CANVAS_H - 2 * _PAD_Y
+    avail_w = tuning.canvas_w - 2 * _PAD_X
+    avail_h = tuning.canvas_h - 2 * _PAD_Y
 
-    scale = min(avail_w / data_w, avail_h / data_h)
+    fit_scale = min(avail_w / data_w, avail_h / data_h)
+    max_scale = min(tuning.canvas_w / data_w, tuning.canvas_h / data_h)
+    scale = min(fit_scale * tuning.scale, max_scale)
     rw = 20 * scale  # canvas rect width  (was svg height)
     rh = 16 * scale  # canvas rect height (was svg width)
-    origin_x = (_CANVAS_W - data_w * scale) / 2
-    origin_y = (_CANVAS_H - data_h * scale) / 2
+    origin_x = (tuning.canvas_w - data_w * scale) / 2 + tuning.offset_x
+    origin_y = (tuning.canvas_h - data_h * scale) / 2 + tuning.offset_y
     return scale, x_min, x_max, y_min, rw, rh, origin_x, origin_y
 
 
@@ -392,9 +418,13 @@ def _make_frame(
 ) -> Image.Image:
     layout = _get_layout(cluster_id)
     meta = CLUSTER_META[cluster_id]
-    scale, x_min, x_max, y_min, rw, rh, ox, oy = _compute_scale(layout)
+    tuning = RENDER_TUNING.get(cluster_id, RenderTuning())
+    scale, x_min, x_max, y_min, rw, rh, ox, oy = _compute_scale(
+        layout,
+        tuning,
+    )
 
-    img = Image.new("RGB", (_CANVAS_W, _CANVAS_H), _BG)
+    img = Image.new("RGB", (tuning.canvas_w, tuning.canvas_h), _BG)
     draw = ImageDraw.Draw(img)
 
     fn_sm = _font(_seat_font_size(rh))

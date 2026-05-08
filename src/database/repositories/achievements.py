@@ -5,7 +5,7 @@ def get_achievement(
     connection: sqlite3.Connection,
     achievement_code: str,
 ) -> sqlite3.Row | None:
-    return connection.execute(
+    return connection.execute(  # type: ignore[no-any-return]
         """
         SELECT *
         FROM achievements

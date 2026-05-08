@@ -11,6 +11,7 @@ from .commands.ping import register_ping_command
 from .commands.register import register_register_command
 from .commands.status import register_status_command
 from .commands.unregister import register_unregister_command
+from .commands.where import register_where_command
 from .config import (
     get_discord_test_guild_id,
     get_discord_token,
@@ -53,6 +54,7 @@ class MaidBot(commands.Bot):
         register_achievements_command(self)
         register_autodaily_command(self)
         register_status_command(self)
+        register_where_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()
 
@@ -73,7 +75,7 @@ class MaidBot(commands.Bot):
 
 def create_bot() -> MaidBot:
     intents = discord.Intents.default()
-    return MaidBot(command_prefix="!", intents=intents)
+    return MaidBot(command_prefix=commands.when_mentioned, intents=intents)
 
 
 def run_bot() -> None:

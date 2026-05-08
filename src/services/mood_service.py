@@ -36,3 +36,18 @@ def mood_asset_path(mood: str) -> str:
         "sleepy": "assets/sleepy.png",
     }
     return paths.get(mood, "assets/normal.png")
+
+
+def level_group(level: int) -> str:
+    """levelをグループ名に変換する。"""
+    if level <= 5:
+        return "low"
+    if level <= 10:
+        return "mid"
+    return "high"
+
+
+def character_image_path(level: int, mood: str) -> str:
+    """levelとmoodの組み合わせで画像パスを返す。"""
+    group = level_group(level)
+    return f"assets/{group}_{mood}.png"

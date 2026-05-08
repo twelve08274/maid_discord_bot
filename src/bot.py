@@ -12,6 +12,7 @@ from .commands.guild import register_guild_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
 from .commands.smash import register_smash_commands
+from .commands.show import register_show_command
 from .commands.status import register_status_command
 from .commands.unlink42 import register_unlink42_command
 from .commands.unregister import register_unregister_command
@@ -66,6 +67,7 @@ class MaidBot(commands.Bot):
         register_smash_commands(self)
         if get_debug_commands_enabled():
             register_debug_commands(self)
+        register_show_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()
 

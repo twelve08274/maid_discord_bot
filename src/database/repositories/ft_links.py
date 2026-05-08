@@ -14,6 +14,10 @@ class LinkedFtAccount:
     token_expires_at: datetime
 
 
+class FtAccountAlreadyLinkedError(RuntimeError):
+    pass
+
+
 def upsert_ft_link(
     connection: sqlite3.Connection,
     user_id: int,
@@ -23,6 +27,20 @@ def upsert_ft_link(
     refresh_token: str,
     token_expires_at: datetime,
 ) -> None:
+    existing_link = connection.execute(
+        """
+        SELECT user_id
+        FROM ft_links
+        WHERE ft_user_id = ?
+          AND user_id != ?
+        """,
+        (str(ft_user_id), user_id),
+    ).fetchone()
+    if existing_link is not None:
+        raise FtAccountAlreadyLinkedError(
+            "This 42 account is already linked to another Discord user."
+        )
+
     connection.execute(
         """
         INSERT INTO ft_links (
@@ -67,6 +85,35 @@ def get_ft_link_for_discord_user(
         """,
         (str(discord_user_id),),
     ).fetchone()
+
+
+def get_ft_link(
+    connection: sqlite3.Connection,
+    user_id: int,
+) -> sqlite3.Row | None:
+    return connection.execute(
+        "SELECT ft_login FROM ft_links WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+
+
+def delete_ft_link_for_discord_user(
+    connection: sqlite3.Connection,
+    discord_user_id: int,
+) -> bool:
+    cursor = connection.execute(
+        """
+        DELETE FROM ft_links
+        WHERE user_id = (
+            SELECT id
+            FROM users
+            WHERE discord_user_id = ?
+        )
+        """,
+        (str(discord_user_id),),
+    )
+    connection.commit()
+    return cursor.rowcount > 0
 
 
 def get_ft_link_by_login(

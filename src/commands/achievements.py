@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.database.connection import get_connection
-from maid_discord_bot.database.repositories.achievements import (
+from src.database.connection import get_connection
+from src.database.repositories.achievements import (
     count_unlocked_visible_achievements,
     count_visible_achievements,
     get_unlocked_achievements_for_user,
 )
-from maid_discord_bot.database.repositories.users import get_or_create_user_id
-from maid_discord_bot.database.schema import initialize_database
+from src.database.repositories.users import get_or_create_user_id
+from src.database.schema import initialize_database
 
 
 def register_achievements_command(bot: commands.Bot) -> None:

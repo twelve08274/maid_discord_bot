@@ -7,14 +7,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.database.repositories.achievements import (  # noqa: E402
+from src.database.repositories.achievements import (  # noqa: E402
     get_unlocked_achievements_for_user,
 )
-from maid_discord_bot.database.repositories.users import (  # noqa: E402
+from src.database.repositories.users import (  # noqa: E402
     get_or_create_user_id,
 )
-from maid_discord_bot.database.schema import initialize_database  # noqa: E402
-from maid_discord_bot.services.neko import (  # noqa: E402
+from src.database.schema import initialize_database  # noqa: E402
+from src.services.neko import (  # noqa: E402
     calculate_next_neko_streak,
     claim_neko,
 )
@@ -85,7 +85,9 @@ class NekoServiceTests(unittest.TestCase):
         self.assertEqual(result.streak, 1)
         self.assertEqual(self._count_claims(result.user_id), 2)
 
-    def test_seventh_consecutive_claim_unlocks_hidden_achievement_once(self) -> None:
+    def test_seventh_consecutive_claim_unlocks_hidden_achievement_once(
+        self,
+    ) -> None:
         result = None
         for day in range(1, 8):
             result = claim_neko(self.connection, 123, date(2026, 5, day))

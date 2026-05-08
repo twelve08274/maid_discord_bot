@@ -5,7 +5,7 @@ def get_user_by_discord_id(
     connection: sqlite3.Connection,
     discord_user_id: int,
 ) -> sqlite3.Row | None:
-    return connection.execute(
+    return connection.execute(  # type: ignore[no-any-return]
         """
         SELECT *
         FROM users
@@ -37,6 +37,30 @@ def get_or_create_user_id(
     connection.commit()
     assert cursor.lastrowid is not None
     return int(cursor.lastrowid)
+
+
+def delete_user_by_discord_id(
+    connection: sqlite3.Connection,
+    discord_user_id: int,
+) -> bool:
+    row = get_user_by_discord_id(connection, discord_user_id)
+    if row is None:
+        return False
+    user_id = int(row["id"])
+    child_tables = (
+        "user_achievements",
+        "daily_claims",
+        "neko_claims",
+        "ft_location_rewards",
+        "tasks",
+        "ft_links",
+    )
+    for table in child_tables:
+        connection.execute(
+            f"DELETE FROM {table} WHERE user_id = ?", (user_id,)
+        )
+    connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    return True
 
 
 def set_auto_daily_enabled(

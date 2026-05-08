@@ -10,6 +10,7 @@ from .commands.autodaily import register_autodaily_command
 from .commands.neko import register_neko_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
+from .commands.unregister import register_unregister_command
 from .config import (
     get_discord_test_guild_id,
     get_discord_token,
@@ -26,7 +27,7 @@ class OAuthWebServer:
 
     def start(self) -> None:
         config = uvicorn.Config(
-            "maid_discord_bot.web.app:app",
+            "src.web.app:app",
             host=get_oauth_web_host(),
             port=get_oauth_web_port(),
             log_level="info",
@@ -48,6 +49,7 @@ class MaidBot(commands.Bot):
     async def setup_hook(self) -> None:
         register_ping_command(self)
         register_register_command(self)
+        register_unregister_command(self)
         register_achievements_command(self)
         register_autodaily_command(self)
         register_neko_command(self)

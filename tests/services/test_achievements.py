@@ -8,14 +8,14 @@ from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from maid_discord_bot.database.repositories.achievements import (  # noqa: E402
+from src.database.repositories.achievements import (  # noqa: E402
     count_unlocked_visible_achievements,
 )
-from maid_discord_bot.database.repositories.users import (  # noqa: E402
+from src.database.repositories.users import (  # noqa: E402
     get_or_create_user_id,
 )
-from maid_discord_bot.database.schema import initialize_database  # noqa: E402
-from maid_discord_bot.services.achievements import grant_achievement  # noqa: E402
+from src.database.schema import initialize_database  # noqa: E402
+from src.services.achievements import grant_achievement  # noqa: E402
 
 
 class AchievementServiceTests(unittest.TestCase):
@@ -32,7 +32,7 @@ class AchievementServiceTests(unittest.TestCase):
         bot = AsyncMock()
 
         with patch(
-            "maid_discord_bot.services.achievements.send_achievement_dm",
+            "src.services.achievements.send_achievement_dm",
             new_callable=AsyncMock,
             return_value=True,
         ) as send_dm:
@@ -72,7 +72,7 @@ class AchievementServiceTests(unittest.TestCase):
         bot = AsyncMock()
 
         with patch(
-            "maid_discord_bot.services.achievements.send_achievement_dm",
+            "src.services.achievements.send_achievement_dm",
             new_callable=AsyncMock,
             return_value=False,
         ):

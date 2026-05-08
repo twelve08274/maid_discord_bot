@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.database.connection import get_connection
-from maid_discord_bot.database.schema import initialize_database
-from maid_discord_bot.services.neko import (
+from src.database.connection import get_connection
+from src.database.schema import initialize_database
+from src.services.neko import (
     NEKO_REPLY,
     NEKO_UNLOCK_MESSAGE,
     claim_neko,
@@ -13,7 +13,7 @@ from maid_discord_bot.services.neko import (
 def register_neko_command(bot: commands.Bot) -> None:
     @bot.tree.command(
         name="neko",
-        description="1日1回だけ猫を呼びます。",
+        description="Call a neko once per day.",
     )
     async def neko(interaction: discord.Interaction) -> None:
         with get_connection() as connection:

@@ -4,19 +4,19 @@ import logging
 import discord
 import httpx
 
-from maid_discord_bot.config import (
+from src.config import (
     ConfigError,
     get_ft_location_poll_interval_seconds,
 )
-from maid_discord_bot.database.connection import get_connection
-from maid_discord_bot.database.repositories.ft_links import (
+from src.database.connection import get_connection
+from src.database.repositories.ft_links import (
     list_auto_daily_ft_links,
 )
-from maid_discord_bot.database.repositories.ft_location_rewards import (
+from src.database.repositories.ft_location_rewards import (
     mark_ft_location_reward_notified,
 )
-from maid_discord_bot.database.schema import initialize_database
-from maid_discord_bot.services.auto_daily import (
+from src.database.schema import initialize_database
+from src.services.auto_daily import (
     AutoDailyRewardResult,
     check_and_reward_auto_daily,
 )

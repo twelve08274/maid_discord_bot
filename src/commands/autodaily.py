@@ -2,12 +2,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from maid_discord_bot.database.connection import get_connection
-from maid_discord_bot.database.repositories.ft_links import (
+from src.database.connection import get_connection
+from src.database.repositories.ft_links import (
     get_ft_link_for_discord_user,
 )
-from maid_discord_bot.database.repositories.users import set_auto_daily_enabled
-from maid_discord_bot.database.schema import initialize_database
+from src.database.repositories.users import set_auto_daily_enabled
+from src.database.schema import initialize_database
 
 
 def register_autodaily_command(bot: commands.Bot) -> None:

@@ -2,12 +2,12 @@ import logging
 import sqlite3
 from typing import Any
 
-from maid_discord_bot.database.repositories.achievements import (
+from src.database.repositories.achievements import (
     get_achievement,
     unlock_achievement,
 )
-from maid_discord_bot.database.repositories.users import get_or_create_user_id
-from maid_discord_bot.services.exp import add_exp
+from src.database.repositories.users import get_or_create_user_id
+from src.services.exp import add_exp
 
 
 logger = logging.getLogger(__name__)

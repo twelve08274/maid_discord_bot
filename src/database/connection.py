@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-from maid_discord_bot.config import get_database_path
+from ..config import get_database_path
 
 
 def get_connection(database_path: Path | None = None) -> sqlite3.Connection:

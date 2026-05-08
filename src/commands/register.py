@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
 
-from maid_discord_bot.config import ConfigError
-from maid_discord_bot.database.connection import get_connection
-from maid_discord_bot.database.schema import initialize_database
-from maid_discord_bot.services.achievements import grant_achievement
-from maid_discord_bot.services.ft_api import create_authorization_url
-from maid_discord_bot.services.oauth_state import create_oauth_state
+from src.config import ConfigError
+from src.database.connection import get_connection
+from src.database.schema import initialize_database
+from src.services.achievements import grant_achievement
+from src.services.ft_api import create_authorization_url
+from src.services.oauth_state import create_oauth_state
 
 
 def register_register_command(bot: commands.Bot) -> None:

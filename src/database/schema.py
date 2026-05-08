@@ -156,8 +156,8 @@ INITIAL_ACHIEVEMENTS = (
     ),
     (
         "neko_7_days",
-        "猫に選ばれし者",
-        "7日連続で /neko を実行した",
+        "Chosen by Neko",
+        "Ran /neko for 7 consecutive days.",
         1,
         0,
         0,
@@ -183,7 +183,8 @@ def _add_missing_achievement_columns(connection: sqlite3.Connection) -> None:
     for column_name, definition in additions.items():
         if column_name not in columns:
             connection.execute(
-                f"ALTER TABLE achievements ADD COLUMN {column_name} {definition}"
+                "ALTER TABLE achievements "
+                f"ADD COLUMN {column_name} {definition}"
             )
 
 

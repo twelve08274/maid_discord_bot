@@ -105,6 +105,11 @@ def get_daily_reward_timezone() -> str:
     return os.getenv("DAILY_REWARD_TIMEZONE", "Asia/Tokyo")
 
 
+def get_debug_mode() -> bool:
+    value = os.getenv("DEBUG", "false").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
 def get_oauth_web_host() -> str:
     return os.getenv("OAUTH_WEB_HOST", "0.0.0.0")
 

@@ -82,11 +82,11 @@ CLUSTER_META: dict[str, ClusterMeta] = {
 # Tweak these by hand when the automatic layout does not match the real floor.
 ENTRANCE_MARKERS: dict[str, EntranceMarker] = {
     "c1": EntranceMarker(x=364, y=28, label="入口↓"),
-    "c2": EntranceMarker(x=360, y=270, label="入口↑"),
+    "c2": EntranceMarker(x=330, y=300, label="入口↑"),
     "c3": EntranceMarker(x=394, y=28, label="入口↓"),
-    "c4": EntranceMarker(x=444, y=288, label="入口↑"),
-    "c5": EntranceMarker(x=374, y=38, label="入口↓"),
-    "c6": EntranceMarker(x=374, y=278, label="入口↑"),
+    "c4": EntranceMarker(x=454, y=295, label="入口↑"),
+    "c5": EntranceMarker(x=274, y=38, label="入口↓"),
+    "c6": EntranceMarker(x=274, y=318, label="入口↑"),
 }
 
 # Per-cluster render tuning. Canvas size changes are useful for tall/narrow
@@ -335,6 +335,10 @@ _DOT = (243, 139, 168)
 
 def _font(size: int = 11) -> ImageFont.ImageFont:
     for path in (
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/ipaexfont-gothic/ipaexg.ttf",
+        "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",
+        "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     ):

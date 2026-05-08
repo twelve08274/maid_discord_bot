@@ -69,6 +69,16 @@ def get_ft_link_for_discord_user(
     ).fetchone()
 
 
+def get_ft_link(
+    connection: sqlite3.Connection,
+    user_id: int,
+) -> sqlite3.Row | None:
+    return connection.execute(
+        "SELECT ft_login FROM ft_links WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+
+
 def list_auto_daily_ft_links(
     connection: sqlite3.Connection,
 ) -> list[LinkedFtAccount]:

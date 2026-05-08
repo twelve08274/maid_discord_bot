@@ -50,6 +50,11 @@ def get_database_path() -> Path:
     return Path(value)
 
 
+def get_debug_commands_enabled() -> bool:
+    value = os.getenv("DEBUG_COMMANDS_ENABLED", "")
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def get_ft_oauth_config() -> FtOAuthConfig:
     client_id = os.getenv("FT_CLIENT_ID")
     client_secret = os.getenv("FT_CLIENT_SECRET")

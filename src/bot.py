@@ -75,7 +75,7 @@ class MaidBot(commands.Bot):
 
 def create_bot() -> MaidBot:
     intents = discord.Intents.default()
-    return MaidBot(command_prefix="!", intents=intents)
+    return MaidBot(command_prefix=commands.when_mentioned, intents=intents)
 
 
 def run_bot() -> None:

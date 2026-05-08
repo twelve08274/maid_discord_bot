@@ -13,16 +13,17 @@
 
 ## SVGファイルと配置方向
 
-プロジェクトルートに置かれているSVGファイル（拡張子なし）をレイアウトの元データとして使用。
+`data/clusters/` に置かれているSVGファイル（拡張子なし）をレイアウトの元データとして使用。
+プロジェクトルート直下には置かない。
 
 | ファイル | クラスタ | 配置タイプ |
 |---------|---------|----------|
-| `c1-koi`   | c1 | row-based（行が水平方向） |
-| `c2-ume`   | c2 | row-based |
-| `c3-washi` | c3 | row-based |
-| `c4-fuji`  | c4 | col-based（SVGの "row" グループが実際は縦列） |
-| `c5-sakura`| c5 | col-based |
-| `c6-tsuru` | c6 | col-based |
+| `data/clusters/c1-koi`   | c1 | row-based（行が水平方向） |
+| `data/clusters/c2-ume`   | c2 | row-based |
+| `data/clusters/c3-washi` | c3 | row-based |
+| `data/clusters/c4-fuji`  | c4 | col-based（SVGの "row" グループが実際は縦列） |
+| `data/clusters/c5-sakura`| c5 | col-based |
+| `data/clusters/c6-tsuru` | c6 | col-based |
 
 ## 机・席の構造
 

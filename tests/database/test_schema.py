@@ -39,6 +39,9 @@ class SchemaTests(unittest.TestCase):
                 "achievements",
                 "user_achievements",
                 "tasks",
+                "guilds",
+                "user_guilds",
+                "command_requirements",
             }.issubset(table_names)
         )
 
@@ -136,6 +139,46 @@ class SchemaTests(unittest.TestCase):
                 "INSERT INTO tasks (user_id, task_name) VALUES (?, ?)",
                 (user_id, "push_swap"),
             )
+
+    def test_initialize_database_seeds_initial_guilds(self) -> None:
+        rows = self.connection.execute(
+            """
+            SELECT name, display_name
+            FROM guilds
+            ORDER BY name
+            """
+        ).fetchall()
+
+        guilds = {row["name"]: row["display_name"] for row in rows}
+
+        self.assertEqual(guilds["smash"], "スマブラギルド")
+        self.assertEqual(guilds["poker"], "ポーカーギルド")
+
+    def test_initialize_database_seeds_command_requirements(self) -> None:
+        rows = self.connection.execute(
+            """
+            SELECT
+                command_requirements.command_name,
+                command_requirements.required_level,
+                guilds.name AS guild_name
+            FROM command_requirements
+            LEFT JOIN guilds
+                ON guilds.id = command_requirements.required_guild_id
+            """
+        ).fetchall()
+
+        requirements = {row["command_name"]: row for row in rows}
+
+        self.assertEqual(
+            int(requirements["status"]["required_level"]),
+            1,
+        )
+        self.assertIsNone(requirements["status"]["guild_name"])
+        self.assertEqual(
+            int(requirements["smash-rate"]["required_level"]),
+            3,
+        )
+        self.assertEqual(requirements["smash-rate"]["guild_name"], "smash")
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from .commands.unregister import register_unregister_command
 from .commands.where import register_where_command
 from .config import (
     get_debug_commands_enabled,
+    get_debug_mode,
     get_discord_test_guild_id,
     get_discord_token,
     get_oauth_web_host,
@@ -60,7 +61,7 @@ class MaidBot(commands.Bot):
         register_achievements_command(self)
         register_autodaily_command(self)
         register_status_command(self)
-        register_where_command(self)
+        register_where_command(self, debug_enabled=get_debug_mode())
         register_guild_command(self)
         register_smash_commands(self)
         if get_debug_commands_enabled():

@@ -9,6 +9,7 @@ from .commands.achievements import register_achievements_command
 from .commands.autodaily import register_autodaily_command
 from .commands.ping import register_ping_command
 from .commands.register import register_register_command
+from .commands.show import register_show_command
 from .commands.status import register_status_command
 from .commands.unregister import register_unregister_command
 from .commands.where import register_where_command
@@ -54,6 +55,7 @@ class MaidBot(commands.Bot):
         register_achievements_command(self)
         register_autodaily_command(self)
         register_status_command(self)
+        register_show_command(self)
         register_where_command(self)
         self.auto_daily_scheduler = FtLocationAutoDailyScheduler(self)
         self.auto_daily_scheduler.start()

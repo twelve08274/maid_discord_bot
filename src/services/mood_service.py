@@ -50,4 +50,4 @@ def level_group(level: int) -> str:
 def character_image_path(level: int, mood: str) -> str:
     """levelとmoodの組み合わせで画像パスを返す。"""
     group = level_group(level)
-    return f"assets/{group}_{mood}.png"
+    return f"src/assets/{group}_{mood}.png"

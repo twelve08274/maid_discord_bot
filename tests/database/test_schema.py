@@ -35,43 +35,15 @@ class SchemaTests(unittest.TestCase):
                 "users",
                 "ft_links",
                 "daily_claims",
-                "neko_claims",
                 "ft_location_rewards",
                 "achievements",
                 "user_achievements",
                 "tasks",
+                "guilds",
+                "user_guilds",
+                "command_requirements",
             }.issubset(table_names)
         )
-
-    def test_users_have_neko_streak_columns(self) -> None:
-        rows = self.connection.execute("PRAGMA table_info(users)").fetchall()
-        column_names = {row["name"] for row in rows}
-
-        self.assertIn("neko_streak", column_names)
-        self.assertIn("last_neko_date", column_names)
-
-    def test_neko_claims_are_unique_per_user_and_date(self) -> None:
-        cursor = self.connection.execute(
-            "INSERT INTO users (discord_user_id) VALUES (?)",
-            ("123",),
-        )
-        user_id = int(cursor.lastrowid)
-        self.connection.execute(
-            """
-            INSERT INTO neko_claims (user_id, claimed_date)
-            VALUES (?, ?)
-            """,
-            (user_id, "2026-05-06"),
-        )
-
-        with self.assertRaises(sqlite3.IntegrityError):
-            self.connection.execute(
-                """
-                INSERT INTO neko_claims (user_id, claimed_date)
-                VALUES (?, ?)
-                """,
-                (user_id, "2026-05-06"),
-            )
 
     def test_daily_claims_are_unique_per_user_and_date(self) -> None:
         cursor = self.connection.execute(
@@ -146,7 +118,6 @@ class SchemaTests(unittest.TestCase):
         achievements = {row["code"]: row for row in rows}
 
         self.assertIn("first_register", achievements)
-        self.assertIn("neko_7_days", achievements)
         self.assertEqual(
             int(achievements["first_register"]["reward_affection"]),
             5,
@@ -168,6 +139,58 @@ class SchemaTests(unittest.TestCase):
                 "INSERT INTO tasks (user_id, task_name) VALUES (?, ?)",
                 (user_id, "push_swap"),
             )
+
+    def test_initialize_database_seeds_initial_guilds(self) -> None:
+        rows = self.connection.execute(
+            """
+            SELECT name, display_name
+            FROM guilds
+            ORDER BY name
+            """
+        ).fetchall()
+
+        guilds = {row["name"]: row["display_name"] for row in rows}
+
+        self.assertEqual(guilds["smash"], "スマブラギルド")
+        self.assertEqual(guilds["poker"], "ポーカーギルド")
+
+    def test_initialize_database_seeds_command_requirements(self) -> None:
+        rows = self.connection.execute(
+            """
+            SELECT
+                command_requirements.command_name,
+                command_requirements.required_level,
+                guilds.name AS guild_name
+            FROM command_requirements
+            LEFT JOIN guilds
+                ON guilds.id = command_requirements.required_guild_id
+            """
+        ).fetchall()
+
+        requirements = {row["command_name"]: row for row in rows}
+
+        self.assertEqual(
+            int(requirements["status"]["required_level"]),
+            1,
+        )
+        self.assertIsNone(requirements["status"]["guild_name"])
+        self.assertEqual(
+            int(requirements["campus"]["required_level"]),
+            0,
+        )
+        self.assertEqual(
+            int(requirements["campusnow"]["required_level"]),
+            2,
+        )
+        self.assertEqual(
+            int(requirements["campusall"]["required_level"]),
+            5,
+        )
+        self.assertEqual(
+            int(requirements["smash-rate"]["required_level"]),
+            3,
+        )
+        self.assertEqual(requirements["smash-rate"]["guild_name"], "smash")
 
 
 if __name__ == "__main__":

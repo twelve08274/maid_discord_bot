@@ -11,6 +11,9 @@ FT_AUTHORIZE_URL = "https://api.intra.42.fr/oauth/authorize"
 FT_TOKEN_URL = "https://api.intra.42.fr/oauth/token"
 FT_ME_URL = "https://api.intra.42.fr/v2/me"
 FT_USER_LOCATIONS_URL = "https://api.intra.42.fr/v2/users/{user_id}/locations"
+FT_CAMPUS_LOCATIONS_URL = (
+    "https://api.intra.42.fr/v2/campus/{campus_id}/locations"
+)
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,12 @@ class FtLocation:
     begin_at: datetime
     end_at: datetime | None
     host: str | None
+
+
+@dataclass(frozen=True)
+class FtAppToken:
+    access_token: str
+    expires_at: datetime
 
 
 def create_authorization_url(
@@ -78,6 +87,31 @@ async def exchange_code_for_token(
     return FtToken(
         access_token=str(payload["access_token"]),
         refresh_token=str(payload["refresh_token"]),
+        expires_at=datetime.now(UTC) + timedelta(seconds=expires_in),
+    )
+
+
+async def fetch_app_access_token(
+    config: FtOAuthConfig | None = None,
+) -> FtAppToken:
+    if config is None:
+        config = get_ft_oauth_config()
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(
+            FT_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": config.client_id,
+                "client_secret": config.client_secret,
+            },
+        )
+        response.raise_for_status()
+
+    payload = response.json()
+    expires_in = int(payload.get("expires_in", 7200))
+    return FtAppToken(
+        access_token=str(payload["access_token"]),
         expires_at=datetime.now(UTC) + timedelta(seconds=expires_in),
     )
 
@@ -156,3 +190,53 @@ async def fetch_active_location(
         ),
         host=location.get("host"),
     )
+
+
+async def fetch_active_campus_location_count(
+    access_token: str,
+    campus_id: str,
+) -> int:
+    locations = await fetch_active_campus_locations(access_token, campus_id)
+    return len(locations)
+
+
+async def fetch_active_campus_locations(
+    access_token: str,
+    campus_id: str,
+) -> list[FtLocation]:
+    page_size = 100
+    page_number = 1
+    locations: list[FtLocation] = []
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        while True:
+            response = await client.get(
+                FT_CAMPUS_LOCATIONS_URL.format(campus_id=campus_id),
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={
+                    "filter[active]": "true",
+                    "page[number]": str(page_number),
+                    "page[size]": str(page_size),
+                },
+            )
+            response.raise_for_status()
+
+            payload = response.json()
+            for location in payload:
+                end_at = location.get("end_at")
+                if end_at is not None:
+                    continue
+                locations.append(
+                    FtLocation(
+                        id=int(location["id"]),
+                        begin_at=datetime.fromisoformat(
+                            str(location["begin_at"]).replace("Z", "+00:00")
+                        ),
+                        end_at=None,
+                        host=location.get("host"),
+                    )
+                )
+
+            if len(payload) < page_size:
+                return locations
+            page_number += 1

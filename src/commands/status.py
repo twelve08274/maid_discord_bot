@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import discord
 from discord.ext import commands
 
@@ -9,7 +7,6 @@ from src.database.repositories.users import get_user_by_discord_id
 from src.database.schema import initialize_database
 from src.services.mood_service import (
     determine_mood,
-    mood_asset_path,
     mood_display_name,
     mood_to_color,
 )
@@ -79,12 +76,5 @@ def register_status_command(bot: commands.Bot) -> None:
             inline=False,
         )
         embed.set_footer(text="Keep going.")
-
-        image_path = Path(mood_asset_path(mood))
-        if image_path.exists():
-            file = discord.File(str(image_path), filename="character.png")
-            embed.set_thumbnail(url="attachment://character.png")
-            await interaction.response.send_message(embed=embed, file=file)
-            return
 
         await interaction.response.send_message(embed=embed)

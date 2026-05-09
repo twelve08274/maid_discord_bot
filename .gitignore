@@ -50,8 +50,11 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# Local data / SQLite
-data/
+# Local SQLite
+data/*.sqlite3
+data/*.sqlite3-journal
+data/*.db
+data/*.db-journal
 *.sqlite3
 *.sqlite3-journal
 *.db

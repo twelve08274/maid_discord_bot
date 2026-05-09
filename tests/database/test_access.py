@@ -71,6 +71,18 @@ class AccessTests(unittest.TestCase):
         self.assertEqual(int(requirement["required_level"]), 3)
         self.assertEqual(requirement["required_guild_name"], "smash")
 
+    def test_get_command_requirement_returns_campus_levels(self) -> None:
+        campus = get_command_requirement(self.connection, "campus")
+        campusnow = get_command_requirement(self.connection, "campusnow")
+        campusall = get_command_requirement(self.connection, "campusall")
+
+        assert campus is not None
+        assert campusnow is not None
+        assert campusall is not None
+        self.assertEqual(int(campus["required_level"]), 0)
+        self.assertEqual(int(campusnow["required_level"]), 2)
+        self.assertEqual(int(campusall["required_level"]), 5)
+
     def test_list_guilds_returns_initial_guilds(self) -> None:
         guilds = list_guilds(self.connection)
 
@@ -128,6 +140,31 @@ class AccessTests(unittest.TestCase):
         self.assertFalse(allowed)
         assert reason is not None
         self.assertIn("level 3", reason)
+
+    def test_check_command_access_rejects_low_level_campusall(self) -> None:
+        self.create_user(123, level=4)
+
+        allowed, reason = check_command_access(
+            self.connection,
+            123,
+            "campusall",
+        )
+
+        self.assertFalse(allowed)
+        assert reason is not None
+        self.assertIn("level 5", reason)
+
+    def test_check_command_access_allows_required_campus_level(self) -> None:
+        self.create_user(123, level=2)
+
+        allowed, reason = check_command_access(
+            self.connection,
+            123,
+            "campusnow",
+        )
+
+        self.assertTrue(allowed)
+        self.assertIsNone(reason)
 
     def test_check_command_access_rejects_missing_guild(self) -> None:
         self.create_user(123, level=3)

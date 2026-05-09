@@ -2,6 +2,8 @@ discord.py
 fastapi
 flake8
 httpx
+lxml
 mypy
+Pillow
 python-dotenv
 uvicorn

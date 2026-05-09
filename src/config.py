@@ -50,6 +50,11 @@ def get_database_path() -> Path:
     return Path(value)
 
 
+def get_debug_commands_enabled() -> bool:
+    value = os.getenv("DEBUG_COMMANDS_ENABLED", "")
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def get_ft_oauth_config() -> FtOAuthConfig:
     client_id = os.getenv("FT_CLIENT_ID")
     client_secret = os.getenv("FT_CLIENT_SECRET")
@@ -103,6 +108,11 @@ def get_ft_location_poll_interval_seconds() -> int:
 
 def get_daily_reward_timezone() -> str:
     return os.getenv("DAILY_REWARD_TIMEZONE", "Asia/Tokyo")
+
+
+def get_debug_mode() -> bool:
+    value = os.getenv("DEBUG", "false").strip().lower()
+    return value in {"1", "true", "yes", "on"}
 
 
 def get_oauth_web_host() -> str:

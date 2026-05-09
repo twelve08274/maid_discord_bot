@@ -6,6 +6,8 @@ import uvicorn
 from discord.ext import commands
 
 from .commands.achievements import register_achievements_command
+from .commands.autodaily import register_autodaily_command
+from .commands.campusnow import register_campusnow_command
 from .commands.debug import register_debug_commands
 from .commands.guild import register_guild_command
 from .commands.ping import register_ping_command
@@ -59,6 +61,8 @@ class MaidBot(commands.Bot):
         register_unlink42_command(self)
         register_unregister_command(self)
         register_achievements_command(self)
+        register_autodaily_command(self)
+        register_campusnow_command(self)
         register_status_command(self)
         register_where_command(self, debug_enabled=get_debug_mode())
         register_guild_command(self)

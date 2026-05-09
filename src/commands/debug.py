@@ -31,15 +31,13 @@ GUILD_ACTION_CHOICES = [
 MOOD_CHOICES = [
     app_commands.Choice(name="happy", value="happy"),
     app_commands.Choice(name="normal", value="normal"),
-    app_commands.Choice(name="tired", value="tired"),
-    app_commands.Choice(name="sleepy", value="sleepy"),
+    app_commands.Choice(name="crying", value="crying"),
 ]
 
 MOOD_STAMINA = {
     "happy": 100,
     "normal": 50,
-    "tired": 30,
-    "sleepy": 10,
+    "crying": 10,
 }
 
 

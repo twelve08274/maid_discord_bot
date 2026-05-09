@@ -175,6 +175,18 @@ class SchemaTests(unittest.TestCase):
         )
         self.assertIsNone(requirements["status"]["guild_name"])
         self.assertEqual(
+            int(requirements["campus"]["required_level"]),
+            0,
+        )
+        self.assertEqual(
+            int(requirements["campusnow"]["required_level"]),
+            2,
+        )
+        self.assertEqual(
+            int(requirements["campusall"]["required_level"]),
+            5,
+        )
+        self.assertEqual(
             int(requirements["smash-rate"]["required_level"]),
             3,
         )

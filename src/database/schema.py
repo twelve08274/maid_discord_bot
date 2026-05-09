@@ -182,6 +182,9 @@ INITIAL_GUILDS = (
 
 
 INITIAL_COMMAND_REQUIREMENTS = (
+    ("campus", 0, None),
+    ("campusnow", 2, None),
+    ("campusall", 5, None),
     ("status", 1, None),
     ("weather", 1, None),
     ("guild-my", 1, None),

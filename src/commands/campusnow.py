@@ -3,6 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 
 from src.config import ConfigError
+from src.database.connection import get_connection
+from src.database.repositories.access import check_command_access
+from src.database.schema import initialize_database
 from src.services.campus_now_service import (
     CLUSTERS,
     CampusAll,
@@ -144,12 +147,34 @@ async def _send_fetch_error(interaction: discord.Interaction) -> None:
     )
 
 
+async def _ensure_command_access(
+    interaction: discord.Interaction,
+    command_name: str,
+) -> bool:
+    with get_connection() as connection:
+        initialize_database(connection)
+        allowed, reason = check_command_access(
+            connection,
+            interaction.user.id,
+            command_name,
+        )
+
+    if allowed:
+        return True
+
+    await interaction.response.send_message(reason, ephemeral=True)
+    return False
+
+
 def register_campusnow_command(bot: commands.Bot) -> None:
     @bot.tree.command(
         name="campus",
         description="Show current 42Tokyo campus crowding.",
     )
     async def campus(interaction: discord.Interaction) -> None:
+        if not await _ensure_command_access(interaction, "campus"):
+            return
+
         await interaction.response.defer()
 
         try:
@@ -176,6 +201,9 @@ def register_campusnow_command(bot: commands.Bot) -> None:
         interaction: discord.Interaction,
         cluster: app_commands.Choice[str],
     ) -> None:
+        if not await _ensure_command_access(interaction, "campusnow"):
+            return
+
         await interaction.response.defer()
 
         try:
@@ -197,6 +225,9 @@ def register_campusnow_command(bot: commands.Bot) -> None:
         description="Show current 42Tokyo campus and cluster crowding.",
     )
     async def campusall(interaction: discord.Interaction) -> None:
+        if not await _ensure_command_access(interaction, "campusall"):
+            return
+
         await interaction.response.defer()
 
         try:

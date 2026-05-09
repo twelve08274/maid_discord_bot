@@ -7,7 +7,10 @@ from src.database.repositories.ft_links import (
     FtAccountAlreadyLinkedError,
     upsert_ft_link,
 )
-from src.database.repositories.users import get_or_create_user_id
+from src.database.repositories.users import (
+    get_or_create_user_id,
+    set_auto_daily_enabled,
+)
 from src.database.schema import initialize_database
 from src.services.ft_api import (
     exchange_code_for_token,
@@ -59,6 +62,11 @@ async def ft_oauth_callback(
                 access_token=token.access_token,
                 refresh_token=token.refresh_token,
                 token_expires_at=token.expires_at,
+            )
+            set_auto_daily_enabled(
+                connection,
+                parsed_state.discord_user_id,
+                True,
             )
         except FtAccountAlreadyLinkedError as error:
             raise HTTPException(status_code=409, detail=str(error)) from error

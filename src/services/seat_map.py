@@ -1,31 +1,13 @@
-"""Seat map renderer for 42Tokyo clusters — parses actual SVG layout files."""
+"""Seat map renderer for 42Tokyo clusters."""
 
 import io
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Literal
-
-import lxml.etree as ET
 
 from PIL import Image, ImageDraw, ImageFont
 
-# ---------------------------------------------------------------------------
-# SVG file paths
-# ---------------------------------------------------------------------------
-
-_BASE_DIR = Path(__file__).parent.parent.parent
-_CLUSTER_LAYOUT_DIR = _BASE_DIR / "data" / "clusters"
-_SVG_FILES = {
-    "c1": _CLUSTER_LAYOUT_DIR / "c1-koi",
-    "c2": _CLUSTER_LAYOUT_DIR / "c2-ume",
-    "c3": _CLUSTER_LAYOUT_DIR / "c3-washi",
-    "c4": _CLUSTER_LAYOUT_DIR / "c4-fuji",
-    "c5": _CLUSTER_LAYOUT_DIR / "c5-sakura",
-    "c6": _CLUSTER_LAYOUT_DIR / "c6-tsuru",
-}
-
-_SVG_NS = "http://www.w3.org/2000/svg"
+from src.services.cluster_layouts import CLUSTER_LAYOUTS
 
 # ---------------------------------------------------------------------------
 # Cluster metadata
@@ -104,78 +86,26 @@ RENDER_TUNING: dict[str, RenderTuning] = {
 # Col-based: each "row" group is actually a vertical column.
 _ROW_BASED = {"c1", "c2", "c3"}
 
-# In row-based clusters: s1 is at x=280, seat step = 16px.
-# Used to infer correct seat number from x when the rect ID is mislabeled.
-_S1_X = 280.0
-_SEAT_STEP = 16.0
-
 # ---------------------------------------------------------------------------
-# SVG parser
+# Static layout parser
 # ---------------------------------------------------------------------------
 
-_RECT_ID_RE = re.compile(r"^c(\d+)r(\d+)s(\d+)$")
-_GROUP_ID_RE = re.compile(r"^row(\d+)$")
 
-
-def parse_svg_layout(
+def parse_cluster_layout(
     cluster_id: str,
 ) -> dict[tuple[int, int], tuple[float, float]]:
-    """Parse SVG → {(row, seat): (svg_x, svg_y)}.
-
-    Uses <g id="rowXX"> for the authoritative row number.
-    Infers seat number from x-position when a rect is mislabeled
-    (e.g., c1r7s4 at x=184 in group row06 → actual c1r6s7).
-    """
-    svg_path = _SVG_FILES[cluster_id]
-    svg_text = svg_path.read_text(encoding="utf-8")
-    svg_text = re.sub(r'(?<!=)""(?=\s|/?>)', '"', svg_text)
-
-    # lxml recovery mode handles malformed SVG attributes after sanitising
-    # known stray quotes that would otherwise drop following sibling nodes.
-    parser = ET.XMLParser(recover=True)
-    root = ET.fromstring(svg_text.encode("utf-8"), parser=parser)
-
-    cluster_num = int(cluster_id[1:])
-    row_based = cluster_id in _ROW_BASED
-
-    seats: dict[tuple[int, int], tuple[float, float]] = {}
-
-    for group in root.iter(f"{{{_SVG_NS}}}g"):
-        gid = group.get("id", "")
-        gm = _GROUP_ID_RE.match(gid)
-        if not gm:
-            continue
-        group_row = int(gm.group(1))
-
-        for rect in group.findall(f"{{{_SVG_NS}}}rect"):
-            rid = rect.get("id", "")
-            rm = _RECT_ID_RE.match(rid)
-            if not rm or int(rm.group(1)) != cluster_num:
-                continue
-
-            rect_row = int(rm.group(2))
-            seat_from_id = int(rm.group(3))
-            x = float(rect.get("x", 0))
-            y = float(rect.get("y", 0))
-
-            # Mislabeled rect (rect row ≠ group row): infer seat from x.
-            if row_based and rect_row != group_row:
-                seat_num = round((_S1_X - x) / _SEAT_STEP) + 1
-            else:
-                seat_num = seat_from_id
-
-            key = (group_row, seat_num)
-            if key not in seats:
-                seats[key] = (x, y)
-
-    return seats
+    """Return {(row, seat): (layout_x, layout_y)} for a cluster."""
+    return {
+        (row, seat): (x, y)
+        for row, seat, x, y in CLUSTER_LAYOUTS[cluster_id]
+    }
 
 
 # ---------------------------------------------------------------------------
 # Position normalisation — collapse stagger to mean ± small offset
 # ---------------------------------------------------------------------------
 
-# SVG units to shift each sub-group from the row mean
+# Layout units to shift each sub-group from the row mean.
 _STAGGER_OFFSET = 5.0
 
 
@@ -228,7 +158,7 @@ def _get_layout(
     cluster_id: str,
 ) -> dict[tuple[int, int], tuple[float, float]]:
     if cluster_id not in _layout_cache:
-        raw = parse_svg_layout(cluster_id)
+        raw = parse_cluster_layout(cluster_id)
         _layout_cache[cluster_id] = _normalize_positions(cluster_id, raw)
     return _layout_cache[cluster_id]
 
@@ -307,12 +237,12 @@ def build_description(cluster_id: str, row: int, seat: int, login: str) -> str:
 # ---------------------------------------------------------------------------
 # Renderer — 90° CW rotation so all clusters render landscape
 #
-# Transform: svg_y → canvas_x (row/col axis goes horizontal)
-#            (x_max - svg_x) → canvas_y (seat axis goes vertical, s1 at top)
+# Transform: layout_y → canvas_x (row/col axis goes horizontal)
+#            (x_max - layout_x) → canvas_y (seat axis goes vertical, s1 at top)
 #
-# SVG rect is 16(x) × 20(y).  After rotation the canvas rect becomes:
-#   rw = 20 * scale  (from svg height/y → now horizontal)
-#   rh = 16 * scale  (from svg width/x  → now vertical)
+# Source cells are 16(x) × 20(y). After rotation the canvas rect becomes:
+#   rw = 20 * scale  (from source height/y → now horizontal)
+#   rh = 16 * scale  (from source width/x  → now vertical)
 # ---------------------------------------------------------------------------
 
 # Canvas — wide landscape format
@@ -363,8 +293,8 @@ def _compute_scale(
     y_min, y_max = min(ys), max(ys)
 
     # After rotation: y-span → canvas width, x-span → canvas height
-    data_w = (y_max - y_min) + 20  # svg_height of rect = 20
-    data_h = (x_max - x_min) + 16  # svg_width  of rect = 16
+    data_w = (y_max - y_min) + 20
+    data_h = (x_max - x_min) + 16
 
     avail_w = tuning.canvas_w - 2 * _PAD_X
     avail_h = tuning.canvas_h - 2 * _PAD_Y
@@ -372,16 +302,16 @@ def _compute_scale(
     fit_scale = min(avail_w / data_w, avail_h / data_h)
     max_scale = min(tuning.canvas_w / data_w, tuning.canvas_h / data_h)
     scale = min(fit_scale * tuning.scale, max_scale)
-    rw = 20 * scale  # canvas rect width  (was svg height)
-    rh = 16 * scale  # canvas rect height (was svg width)
+    rw = 20 * scale
+    rh = 16 * scale
     origin_x = (tuning.canvas_w - data_w * scale) / 2 + tuning.offset_x
     origin_y = (tuning.canvas_h - data_h * scale) / 2 + tuning.offset_y
     return scale, x_min, x_max, y_min, rw, rh, origin_x, origin_y
 
 
 def _to_canvas(
-    svg_x: float,
-    svg_y: float,
+    layout_x: float,
+    layout_y: float,
     scale: float,
     x_min: float,
     x_max: float,
@@ -389,8 +319,8 @@ def _to_canvas(
     origin_x: float,
     origin_y: float,
 ) -> tuple[float, float]:
-    cx = origin_x + (svg_y - y_min) * scale
-    cy = origin_y + (x_max - svg_x) * scale
+    cx = origin_x + (layout_y - y_min) * scale
+    cy = origin_y + (x_max - layout_x) * scale
     return cx, cy
 
 
@@ -437,8 +367,17 @@ def _make_frame(
 
     draw.text((8, 8), meta.name, fill=_TEXT, font=fn_lg)
 
-    for (row, seat), (svg_x, svg_y) in layout.items():
-        cx, cy = _to_canvas(svg_x, svg_y, scale, x_min, x_max, y_min, ox, oy)
+    for (row, seat), (layout_x, layout_y) in layout.items():
+        cx, cy = _to_canvas(
+            layout_x,
+            layout_y,
+            scale,
+            x_min,
+            x_max,
+            y_min,
+            ox,
+            oy,
+        )
         is_target = row == target_row and seat == target_seat
 
         fill = _TARGET_FILL if is_target else _DESK_FILL
@@ -525,14 +464,14 @@ def _draw_labels(
         rows.setdefault(row, []).append(pos)
 
     for row, positions in rows.items():
-        svg_ys = [p[1] for p in positions]
-        svg_xs = [p[0] for p in positions]
-        mid_svg_y = (min(svg_ys) + max(svg_ys)) / 2
-        top_svg_x = max(svg_xs)
+        layout_ys = [p[1] for p in positions]
+        layout_xs = [p[0] for p in positions]
+        mid_layout_y = (min(layout_ys) + max(layout_ys)) / 2
+        top_layout_x = max(layout_xs)
 
         cx, cy = _to_canvas(
-            top_svg_x,
-            mid_svg_y,
+            top_layout_x,
+            mid_layout_y,
             scale,
             x_min,
             x_max,

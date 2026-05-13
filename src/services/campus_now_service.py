@@ -12,7 +12,7 @@ from src.services.ft_api import (
     fetch_active_campus_locations,
     fetch_app_access_token,
 )
-from src.services.seat_map import parse_host, parse_svg_layout
+from src.services.seat_map import parse_cluster_layout, parse_host
 
 
 @dataclass(frozen=True)
@@ -208,7 +208,7 @@ async def get_cluster_now(cluster: str) -> ClusterNow:
     return build_cluster_now(
         cluster_name=cluster_name,
         active_count=counts[cluster_id],
-        seat_count=len(parse_svg_layout(cluster_id)),
+        seat_count=len(parse_cluster_layout(cluster_id)),
         fetched_at=fetched_at,
     )
 
@@ -227,7 +227,7 @@ async def get_campus_all() -> CampusAll:
         build_cluster_now(
             cluster_name=cluster_name,
             active_count=counts[cluster_id],
-            seat_count=len(parse_svg_layout(cluster_id)),
+            seat_count=len(parse_cluster_layout(cluster_id)),
             fetched_at=fetched_at,
         )
         for cluster_name, (cluster_id, _display_name) in CLUSTERS.items()

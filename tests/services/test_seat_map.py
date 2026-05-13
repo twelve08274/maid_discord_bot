@@ -9,25 +9,11 @@ from src.services import seat_map  # noqa: E402
 
 
 class SeatMapRenderTests(unittest.TestCase):
-    def _skip_without_cluster_layout_files(self) -> None:
-        missing = [
-            str(path)
-            for path in seat_map._SVG_FILES.values()
-            if not path.exists()
-        ]
-        if missing:
-            self.skipTest(
-                "cluster layout files are missing: " + ", ".join(missing)
-            )
-
-    def test_cluster_layout_files_are_loaded_from_data_directory(self) -> None:
-        expected_dir = (
-            Path(__file__).resolve().parents[2] / "data" / "clusters"
-        )
-
-        for cluster_id, path in seat_map._SVG_FILES.items():
+    def test_static_cluster_layouts_are_available(self) -> None:
+        for cluster_id in seat_map.CLUSTER_META:
             with self.subTest(cluster_id=cluster_id):
-                self.assertEqual(path.parent, expected_dir)
+                layout = seat_map.parse_cluster_layout(cluster_id)
+                self.assertGreater(len(layout), 0)
 
     def _desk_margins(
         self,
@@ -43,10 +29,10 @@ class SeatMapRenderTests(unittest.TestCase):
         xs: list[float] = []
         ys: list[float] = []
 
-        for svg_x, svg_y in layout.values():
+        for layout_x, layout_y in layout.values():
             cx, cy = seat_map._to_canvas(
-                svg_x,
-                svg_y,
+                layout_x,
+                layout_y,
                 scale,
                 x_min,
                 x_max,
@@ -65,7 +51,6 @@ class SeatMapRenderTests(unittest.TestCase):
         )
 
     def test_c1_layout_includes_all_rows(self) -> None:
-        self._skip_without_cluster_layout_files()
         layout = seat_map._get_layout("c1")
 
         self.assertIn((1, 1), layout)
@@ -78,7 +63,6 @@ class SeatMapRenderTests(unittest.TestCase):
                 )
 
     def test_c1_r1_target_seat_is_visible(self) -> None:
-        self._skip_without_cluster_layout_files()
         frame = seat_map._make_frame("c1", 1, 1, show_dot=True)
         pixels = getattr(frame, "get_flattened_data", frame.getdata)()
         target_pixels = [
@@ -88,7 +72,6 @@ class SeatMapRenderTests(unittest.TestCase):
         self.assertGreater(len(target_pixels), 0)
 
     def test_desk_area_is_centered_in_canvas(self) -> None:
-        self._skip_without_cluster_layout_files()
         for cluster_id in seat_map.CLUSTER_META:
             with self.subTest(cluster_id=cluster_id):
                 left, top, right, bottom = self._desk_margins(cluster_id)
@@ -97,7 +80,6 @@ class SeatMapRenderTests(unittest.TestCase):
                 self.assertLess(abs(top - bottom), 1.0)
 
     def test_seat_number_font_uses_cell_height(self) -> None:
-        self._skip_without_cluster_layout_files()
         layout = seat_map._get_layout("c1")
         tuning = seat_map.RENDER_TUNING.get("c1", seat_map.RenderTuning())
         *_, rh, _, _ = seat_map._compute_scale(layout, tuning)
@@ -117,7 +99,6 @@ class SeatMapRenderTests(unittest.TestCase):
         self.assertGreater(tuning.canvas_h, seat_map._CANVAS_H)
 
     def test_frame_uses_cluster_canvas_size(self) -> None:
-        self._skip_without_cluster_layout_files()
         tuning = seat_map.RENDER_TUNING["c5"]
         frame = seat_map._make_frame("c5", 1, 1, show_dot=True)
 

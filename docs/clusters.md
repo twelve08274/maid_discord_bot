@@ -11,44 +11,38 @@
 | c5 | 桜 (sakura)| 4F | 右 | R1 | No  (高番号席が入口側) |
 | c6 | 鶴 (tsuru) | 4F | 左 | R4 | No  (高番号席が入口側) |
 
-## SVGファイルと配置方向
+## レイアウトデータと配置方向
 
-`data/clusters/` に置かれているSVGファイル（拡張子なし）をレイアウトの元データとして使用。
-プロジェクトルート直下には置かない。
+`src/services/cluster_layouts.py` の静的座標データをレイアウトの元データとして使用。
+実行時にSVGファイルやXMLパーサには依存しない。
 
-| ファイル | クラスタ | 配置タイプ |
-|---------|---------|----------|
-| `data/clusters/c1-koi`   | c1 | row-based（行が水平方向） |
-| `data/clusters/c2-ume`   | c2 | row-based |
-| `data/clusters/c3-washi` | c3 | row-based |
-| `data/clusters/c4-fuji`  | c4 | col-based（SVGの "row" グループが実際は縦列） |
-| `data/clusters/c5-sakura`| c5 | col-based |
-| `data/clusters/c6-tsuru` | c6 | col-based |
+| クラスタ | 配置タイプ |
+|---------|----------|
+| c1 | row-based（行が水平方向） |
+| c2 | row-based |
+| c3 | row-based |
+| c4 | col-based（内部のrow番号が実際は縦列） |
+| c5 | col-based |
+| c6 | col-based |
 
 ## 机・席の構造
 
 - 1つの机に2台のPCがあり、**向かい合って**2人が座る
-- SVG上では同じ行内に**2つのy座標レベル**（row-based）または**2つのx座標レベル**（col-based）として表現されている
+- 座標データ上では同じ行内に**2つのy座標レベル**（row-based）または**2つのx座標レベル**（col-based）として表現されている
 - 奇数席と偶数席が互い違いに配置されているように見えるが、実際には1つの机の表と裏
 
-## SVG パース上の注意点
+## 旧SVG由来データの注意点
 
-### c1-koi の不正XML
-- `style` 属性に二重の `""` が含まれておりXML的に不正
-- 対策: `lxml` の `recover=True` モードで解析
-
-### ミスラベルされた rect ID
-- `c1-koi` の `group row06` 内に `id="c1r7s4"` という不正なrectが存在（本来は c1r6s7）
-- `c3-washi` の `group row06` 内に `id="c3r7s4"` という不正なrectが存在（本来は c3r6s7）
-- 検出方法: `rect` の行番号 ≠ `<g>` の行番号のとき
-- 修正方法: x座標から席番号を逆算 `seat = round((280 - x) / 16) + 1`
+- 現在の静的座標データは、旧SVGパーサで補正済みの座標から生成している
+- 旧SVGには `c1` と `c3` の row06 にミスラベルされたrect IDがあった
+- 静的座標データでは、これらは補正後の `(row, seat)` として保存済み
 
 ## 画像レンダリング仕様
 
-- Pillow で生成（SVGをそのまま変換しない）
+- Pillow で生成
 - 向き: 90° 時計回り回転して横長
-  - SVG の y軸（行方向）→ canvas の x軸（左右）
-  - SVG の x軸（席方向）→ canvas の y軸（上下）、s1が上
+  - layout_y（行方向）→ canvas の x軸（左右）
+  - layout_x（席方向）→ canvas の y軸（上下）、s1が上
 - 出力サイズ・倍率は `src/services/seat_map.py` の `RENDER_TUNING` でクラスタごとに調整
   - `canvas_w`, `canvas_h`: GIF画像自体のサイズ
   - `scale`: fit後の追加倍率（端が切れない最大倍率で自動clamp）
@@ -56,4 +50,4 @@
 - 入口ラベル位置は `ENTRANCE_MARKERS` の canvas 座標で手動指定
 - 色テーマ: Catppuccin Mocha ベース
 - アニメーション: 対象席のドットが点滅する2フレームGIF（600ms間隔）
-- 机ペアの可視化: 各行内で2つのy-levelを `±5 SVGユニット` だけ中心からずらして表示し、どちら側の席かを判別できるようにしている
+- 机ペアの可視化: 各行内で2つのy-levelを `±5` レイアウト単位だけ中心からずらして表示し、どちら側の席かを判別できるようにしている

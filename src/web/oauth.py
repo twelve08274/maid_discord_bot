@@ -3,8 +3,14 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
 from src.database.connection import get_connection
-from src.database.repositories.ft_links import upsert_ft_link
-from src.database.repositories.users import get_or_create_user_id
+from src.database.repositories.ft_links import (
+    FtAccountAlreadyLinkedError,
+    upsert_ft_link,
+)
+from src.database.repositories.users import (
+    get_or_create_user_id,
+    set_auto_daily_enabled,
+)
 from src.database.schema import initialize_database
 from src.services.ft_api import (
     exchange_code_for_token,
@@ -47,15 +53,23 @@ async def ft_oauth_callback(
             connection,
             parsed_state.discord_user_id,
         )
-        upsert_ft_link(
-            connection,
-            user_id=user_id,
-            ft_user_id=ft_user.id,
-            ft_login=ft_user.login,
-            access_token=token.access_token,
-            refresh_token=token.refresh_token,
-            token_expires_at=token.expires_at,
-        )
+        try:
+            upsert_ft_link(
+                connection,
+                user_id=user_id,
+                ft_user_id=ft_user.id,
+                ft_login=ft_user.login,
+                access_token=token.access_token,
+                refresh_token=token.refresh_token,
+                token_expires_at=token.expires_at,
+            )
+            set_auto_daily_enabled(
+                connection,
+                parsed_state.discord_user_id,
+                True,
+            )
+        except FtAccountAlreadyLinkedError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
 
     return (
         "<!doctype html>"

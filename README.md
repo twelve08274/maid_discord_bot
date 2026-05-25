@@ -20,8 +20,6 @@ FT_CLIENT_SECRET=
 FT_REDIRECT_URI=http://localhost:8000/oauth/42/callback
 FT_SCOPES=public
 FT_STATE_SECRET=
-OAUTH_WEB_HOST=0.0.0.0
-OAUTH_WEB_PORT=8000
 FT_LOCATION_POLL_INTERVAL_SECONDS=300
 DAILY_REWARD_TIMEZONE=Asia/Tokyo
 ```
@@ -32,27 +30,23 @@ DAILY_REWARD_TIMEZONE=Asia/Tokyo
 
 ## `.venv` 作成から実行まで
 
-Python 3.12 以上を推奨します。
+以下はWindows PowerShellでの手順です。
 
-既存の `.venv` が壊れている、または依存関係が足りない場合は、削除して作り直してください。
+### 1. `.venv` を作成する
 
-### Windows PowerShell
-
-`.venv` を作り直します。
+Pythonランチャーが使える場合:
 
 ```powershell
-Remove-Item -Recurse -Force .\.venv -ErrorAction SilentlyContinue
 py -3.12 -m venv .venv
 ```
 
 `py` が使えない場合:
 
 ```powershell
-Remove-Item -Recurse -Force .\.venv -ErrorAction SilentlyContinue
 python -m venv .venv
 ```
 
-`.venv` を有効化します。
+### 2. `.venv` を有効化する
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -65,47 +59,16 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .\.venv\Scripts\Activate.ps1
 ```
 
-依存関係をインストールします。
+有効化できると、プロンプトの先頭に `(.venv)` が付きます。
+
+### 3. 依存関係をインストールする
 
 ```powershell
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### Linux / WSL
-
-`.venv` を作り直します。
-
-```bash
-rm -rf .venv
-python3.12 -m venv .venv
-```
-
-`python3.12` が使えない場合:
-
-```bash
-rm -rf .venv
-python3 -m venv .venv
-```
-
-`.venv` を有効化します。
-
-```bash
-source .venv/bin/activate
-```
-
-依存関係をインストールします。
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-有効化できると、プロンプトの先頭に `(.venv)` が付きます。
-
-以降のコマンドは、Windows / Linux ともに `.venv` を有効化した状態で実行します。
-
-### データベースを初期化する
+### 4. データベースを初期化する
 
 ```powershell
 python scripts/init_db.py
@@ -113,11 +76,12 @@ python scripts/init_db.py
 
 `DATABASE_PATH` に指定したSQLiteファイルと必要なテーブルが作成されます。
 
-### OAuth Webサーバーを起動する
+### 5. OAuth Webサーバーを起動する
 
-42アカウント連携のcallbackを受けるため、Botとは別のターミナルで起動します。
+42アカウント連携のcallbackを受けるため、Botとは別のPowerShellで起動します。
 
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python -m uvicorn maid_discord_bot.web.app:app --app-dir src --host 0.0.0.0 --port 8000
 ```
 
@@ -125,11 +89,12 @@ python -m uvicorn maid_discord_bot.web.app:app --app-dir src --host 0.0.0.0 --po
 
 すでにDBに42連携済みユーザーが入っていて、自動Dailyだけ動かしたい場合は、このWebサーバーなしでもBot本体は動きます。
 
-### Discord Botを起動する
+### 6. Discord Botを起動する
 
-別のターミナルで実行します。
+別のPowerShellで実行します。
 
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python main.py
 ```
 

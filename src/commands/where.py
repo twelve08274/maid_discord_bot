@@ -1,3 +1,4 @@
+import io
 from datetime import UTC, datetime
 
 import discord
@@ -11,9 +12,41 @@ from src.database.repositories.ft_links import (
 )
 from src.services.auto_daily import TOKEN_REFRESH_MARGIN
 from src.services.ft_api import fetch_active_location, refresh_access_token
+from src.services.seat_map import (
+    CLUSTER_META,
+    build_description,
+    parse_host,
+    render_seat_map_gif,
+)
 
 
-def register_where_command(bot: commands.Bot) -> None:
+def _build_seat_map_response(
+    cluster_id: str,
+    row: int,
+    seat: int,
+    login: str,
+    host: str,
+) -> tuple[discord.Embed, discord.File]:
+    gif_bytes = render_seat_map_gif(cluster_id, row, seat)
+    description = build_description(cluster_id, row, seat, login)
+
+    embed = discord.Embed(
+        title=f"{login} の現在地",
+        description=description,
+        color=discord.Color.from_rgb(243, 139, 168),
+    )
+    embed.set_footer(text=f"ホスト: {host}")
+    embed.set_image(url="attachment://seat_map.gif")
+
+    file = discord.File(io.BytesIO(gif_bytes), filename="seat_map.gif")
+    return embed, file
+
+
+def register_where_command(
+    bot: commands.Bot,
+    *,
+    debug_enabled: bool = False,
+) -> None:
     @bot.tree.command(
         name="where",
         description="登録済みユーザーの現在の席を表示します。",
@@ -66,7 +99,75 @@ def register_where_command(bot: commands.Bot) -> None:
             )
             return
 
+        host = location.host
+        try:
+            cluster_id, row, seat = parse_host(host)
+        except ValueError:
+            await interaction.followup.send(
+                f"`{login}` は **{host}** にいます。",
+                ephemeral=True,
+            )
+            return
+
+        if cluster_id not in CLUSTER_META:
+            await interaction.followup.send(
+                f"`{login}` は **{host}** にいます。（マップ未対応クラスタ）",
+                ephemeral=True,
+            )
+            return
+
+        embed, file = _build_seat_map_response(
+            cluster_id,
+            row,
+            seat,
+            login,
+            host,
+        )
         await interaction.followup.send(
-            f"`{login}` は **{location.host}** にいます。",
+            embed=embed,
+            file=file,
+            ephemeral=True,
+        )
+
+    if not debug_enabled:
+        return
+
+    @bot.tree.command(
+        name="where_debug",
+        description="DEBUG: 席番号から座席マップを表示します。",
+    )
+    @app_commands.describe(host="席番号。例: c1r1s1")
+    async def where_debug(
+        interaction: discord.Interaction,
+        host: str,
+    ) -> None:
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            cluster_id, row, seat = parse_host(host)
+        except ValueError:
+            await interaction.followup.send(
+                "ホスト形式が不正です。例: c1r1s1",
+                ephemeral=True,
+            )
+            return
+
+        if cluster_id not in CLUSTER_META:
+            await interaction.followup.send(
+                f"`{host}` はマップ未対応クラスタです。",
+                ephemeral=True,
+            )
+            return
+
+        embed, file = _build_seat_map_response(
+            cluster_id,
+            row,
+            seat,
+            "debug",
+            host.lower(),
+        )
+        await interaction.followup.send(
+            embed=embed,
+            file=file,
             ephemeral=True,
         )

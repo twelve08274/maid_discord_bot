@@ -39,6 +39,41 @@ def get_or_create_user_id(
     return int(cursor.lastrowid)
 
 
+def set_user_level_by_discord_id(
+    connection: sqlite3.Connection,
+    discord_user_id: int,
+    level: int,
+) -> None:
+    user_id = get_or_create_user_id(connection, discord_user_id)
+    connection.execute(
+        """
+        UPDATE users
+        SET level = ?, exp = 0, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (level, user_id),
+    )
+    connection.commit()
+
+
+def set_user_mood_by_discord_id(
+    connection: sqlite3.Connection,
+    discord_user_id: int,
+    mood: str,
+    stamina: int,
+) -> None:
+    user_id = get_or_create_user_id(connection, discord_user_id)
+    connection.execute(
+        """
+        UPDATE users
+        SET mood = ?, stamina = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (mood, stamina, user_id),
+    )
+    connection.commit()
+
+
 def delete_user_by_discord_id(
     connection: sqlite3.Connection,
     discord_user_id: int,
@@ -49,8 +84,8 @@ def delete_user_by_discord_id(
     user_id = int(row["id"])
     child_tables = (
         "user_achievements",
+        "user_guilds",
         "daily_claims",
-        "neko_claims",
         "ft_location_rewards",
         "tasks",
         "ft_links",
@@ -76,25 +111,5 @@ def set_auto_daily_enabled(
         WHERE id = ?
         """,
         (1 if enabled else 0, user_id),
-    )
-    connection.commit()
-
-
-def update_neko_streak(
-    connection: sqlite3.Connection,
-    user_id: int,
-    streak: int,
-    last_neko_date: str,
-) -> None:
-    connection.execute(
-        """
-        UPDATE users
-        SET
-            neko_streak = ?,
-            last_neko_date = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-        """,
-        (streak, last_neko_date, user_id),
     )
     connection.commit()

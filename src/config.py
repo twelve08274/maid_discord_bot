@@ -50,6 +50,11 @@ def get_database_path() -> Path:
     return Path(value)
 
 
+def get_debug_commands_enabled() -> bool:
+    value = os.getenv("DEBUG_COMMANDS_ENABLED", "")
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def get_ft_oauth_config() -> FtOAuthConfig:
     client_id = os.getenv("FT_CLIENT_ID")
     client_secret = os.getenv("FT_CLIENT_SECRET")
@@ -101,8 +106,45 @@ def get_ft_location_poll_interval_seconds() -> int:
     return interval
 
 
+def get_campus_now_campus_id() -> str:
+    return os.getenv("CAMPUS_NOW_CAMPUS_ID", "26")
+
+
+def get_campus_now_pc_count() -> int:
+    env_name = "CAMPUS_NOW_PC_COUNT"
+    value = os.getenv(env_name, "300")
+    try:
+        pc_count = int(value)
+    except ValueError as error:
+        message = f"{env_name} must be an integer."
+        raise ConfigError(message) from error
+
+    if pc_count <= 0:
+        raise ConfigError(f"{env_name} must be positive.")
+    return pc_count
+
+
+def get_campus_now_cache_seconds() -> int:
+    env_name = "CAMPUS_NOW_CACHE_SECONDS"
+    value = os.getenv(env_name, "60")
+    try:
+        cache_seconds = int(value)
+    except ValueError as error:
+        message = f"{env_name} must be an integer."
+        raise ConfigError(message) from error
+
+    if cache_seconds <= 0:
+        raise ConfigError(f"{env_name} must be positive.")
+    return cache_seconds
+
+
 def get_daily_reward_timezone() -> str:
     return os.getenv("DAILY_REWARD_TIMEZONE", "Asia/Tokyo")
+
+
+def get_debug_mode() -> bool:
+    value = os.getenv("DEBUG", "false").strip().lower()
+    return value in {"1", "true", "yes", "on"}
 
 
 def get_oauth_web_host() -> str:

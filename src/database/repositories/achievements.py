@@ -56,6 +56,7 @@ def get_unlocked_achievements_for_user(
             JOIN achievements a
                 ON ua.achievement_id = a.id
             WHERE ua.user_id = ?
+                AND a.hidden = 0
             ORDER BY ua.unlocked_at ASC
             """,
             (user_id,),

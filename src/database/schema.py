@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
     mood TEXT NOT NULL DEFAULT 'normal',
     auto_daily_enabled INTEGER NOT NULL DEFAULT 0,
     last_login_date TEXT,
-    neko_streak INTEGER NOT NULL DEFAULT 0,
-    last_neko_date TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -40,15 +38,6 @@ CREATE TABLE IF NOT EXISTS daily_claims (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE (user_id, claim_date)
-);
-
-CREATE TABLE IF NOT EXISTS neko_claims (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    claimed_date TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE (user_id, claimed_date)
 );
 
 CREATE TABLE IF NOT EXISTS ft_location_rewards (
@@ -95,6 +84,33 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE (user_id, task_name)
+);
+
+CREATE TABLE IF NOT EXISTS guilds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_guilds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    guild_id INTEGER NOT NULL,
+    joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (guild_id) REFERENCES guilds(id),
+    UNIQUE (user_id, guild_id)
+);
+
+CREATE TABLE IF NOT EXISTS command_requirements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    command_name TEXT UNIQUE NOT NULL,
+    required_level INTEGER NOT NULL DEFAULT 1,
+    required_guild_id INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (required_guild_id) REFERENCES guilds(id)
 );
 """
 
@@ -154,15 +170,28 @@ INITIAL_ACHIEVEMENTS = (
         0,
         0,
     ),
-    (
-        "neko_7_days",
-        "Chosen by Neko",
-        "Ran /neko for 7 consecutive days.",
-        1,
-        0,
-        0,
-        0,
-    ),
+)
+
+
+INITIAL_GUILDS = (
+    ("smash", "スマブラギルド"),
+    ("poker", "ポーカーギルド"),
+    ("study", "勉強ギルド"),
+    ("food", "ご飯ギルド"),
+)
+
+
+INITIAL_COMMAND_REQUIREMENTS = (
+    ("campus", 0, None),
+    ("campusnow", 2, None),
+    ("campusall", 5, None),
+    ("status", 1, None),
+    ("weather", 1, None),
+    ("guild-my", 1, None),
+    ("smash-rate", 3, "smash"),
+    ("smash-ranking", 5, "smash"),
+    ("poker-benefit", 5, "poker"),
+    ("poker-ranking", 10, "poker"),
 )
 
 
@@ -185,20 +214,6 @@ def _add_missing_achievement_columns(connection: sqlite3.Connection) -> None:
             connection.execute(
                 "ALTER TABLE achievements "
                 f"ADD COLUMN {column_name} {definition}"
-            )
-
-
-def _add_missing_user_columns(connection: sqlite3.Connection) -> None:
-    columns = _column_names(connection, "users")
-    additions = {
-        "neko_streak": "INTEGER NOT NULL DEFAULT 0",
-        "last_neko_date": "TEXT",
-    }
-
-    for column_name, definition in additions.items():
-        if column_name not in columns:
-            connection.execute(
-                f"ALTER TABLE users ADD COLUMN {column_name} {definition}"
             )
 
 
@@ -227,9 +242,50 @@ def _seed_initial_achievements(connection: sqlite3.Connection) -> None:
     )
 
 
+def _seed_initial_guilds(connection: sqlite3.Connection) -> None:
+    connection.executemany(
+        """
+        INSERT INTO guilds (name, display_name)
+        VALUES (?, ?)
+        ON CONFLICT(name) DO UPDATE SET
+            display_name = excluded.display_name
+        """,
+        INITIAL_GUILDS,
+    )
+
+
+def _seed_initial_command_requirements(
+    connection: sqlite3.Connection,
+) -> None:
+    connection.executemany(
+        """
+        INSERT INTO command_requirements (
+            command_name,
+            required_level,
+            required_guild_id
+        )
+        VALUES (
+            ?,
+            ?,
+            (
+                SELECT id
+                FROM guilds
+                WHERE name = ?
+            )
+        )
+        ON CONFLICT(command_name) DO UPDATE SET
+            required_level = excluded.required_level,
+            required_guild_id = excluded.required_guild_id,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        INITIAL_COMMAND_REQUIREMENTS,
+    )
+
+
 def initialize_database(connection: sqlite3.Connection) -> None:
     connection.executescript(SCHEMA_SQL)
-    _add_missing_user_columns(connection)
     _add_missing_achievement_columns(connection)
     _seed_initial_achievements(connection)
+    _seed_initial_guilds(connection)
+    _seed_initial_command_requirements(connection)
     connection.commit()
